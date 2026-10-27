@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurisMap - Centro de Control</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">🗺️</div>
+                <h2>TurisMap Admin</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" id="nav-negocios" class="active" onclick="cambiarVista('negocios')"><span>📍</span> Agregar Negocio</a></li>
+                    <li><a href="#" id="nav-municipios" onclick="cambiarVista('municipios')"><span>⛅</span> Gestionar Pueblos</a></li>
+                    <li><a href="#" id="nav-usuarios" onclick="cambiarVista('usuarios')"><span>👥</span> Usuarios y Roles</a></li>
+                    <li style="margin-top: 30px;">
+                        <a href="#" onclick="cerrarSesion()" style="color: #ef4444;">
+                            <span>🚪</span> Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- VISTA 1: AGREGAR NEGOCIO -->
+            <div id="vista-negocios" class="vista-activa fade-in">
+                <header class="page-header">
+                    <div>
+                        <h1>Registrar en Directorio</h1>
+                        <p>Añade nuevos atractivos, hoteles o restaurantes a la Ruta de las Flores.</p>
+                    </div>
+                </header>
+
+                <form id="formAgregarNegocio">
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="nombre">Nombre del Establecimiento</label>
+                        <input type="text" id="nombre" placeholder="Ej. Café de la Abuela" required>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="municipio">Municipio</label>
+                        <select id="municipio" required>
+                            <option value="">Selecciona ubicación...</option>
+                            <option value="ataco">Concepción de Ataco</option>
+                            <option value="apaneca">Apaneca</option>
+                            <option value="juayua">Juayúa</option>
+                            <option value="salcoatitan">Salcoatitán</option>
+                            <option value="nahuizalco">Nahuizalco</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="tipo">Categoría</label>
+                        <select id="tipo" required>
+                            <option value="">Selecciona una...</option>
+                            <option value="restaurante">Restaurante / Cafetería</option>
+                            <option value="hotel">Hotel / Hostal</option>
+                            <option value="artesania">Tienda de Artesanías</option>
+                            <option value="atractivo">Atractivo Natural / Cascada</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-2">
+                        <label for="llamativo">Cosas Llamativas (Separadas por coma)</label>
+                        <input type="text" id="llamativo" placeholder="Ej. Vista a la montaña, Música en vivo...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción General</label>
+                    <textarea id="descripcion" rows="3" placeholder="Describe el ambiente y qué ofrece el lugar..."></textarea>
+                </div>
+
+                <div class="form-section-divider">Datos Internos del Propietario</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre-dueno">Nombre Completo</label>
+                        <input type="text" id="nombre-dueno" placeholder="Ej. María Pérez" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono-dueno">Teléfono (WhatsApp)</label>
+                        <input type="tel" id="telefono-dueno" placeholder="Ej. 7000-0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="correo-dueno">Correo Electrónico</label>
+                        <input type="email" id="correo-dueno" placeholder="Ej. contacto@negocio.com">
+                    </div>
+                </div>
+
+                <div class="form-section-divider">Multimedia y Ubicación</div>
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label>Fotografías</label>
+                        <div class="upload-area">
+                            <input type="file" id="fotos" accept="image/png, image/jpeg" multiple required>
+                            <div class="upload-text">
+                                <div style="font-size: 24px; margin-bottom: 8px;">📸</div>
+                                <span>Haz clic o arrastra fotos aquí</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>Ubicación en el Mapa</label>
+                        <div id="mapa-interactivo" class="map-placeholder">
+                            <span>🗺️ Vista previa del mapa</span>
+                        </div>
+                        <div class="form-row mt-2">
+                            <div class="form-group">
+                                <input type="text" id="latitud" placeholder="Latitud" readonly>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="longitud" placeholder="Longitud" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">✨ Guardar en Firebase</button>
+                </div>
+                </form>
+
+                <div class="form-section-divider">Negocios Registrados</div>
+                <section class="form-card" style="margin-top: 20px; max-width: 1000px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-comercios-body">
+                            <!-- Renderizado dinámico -->
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- VISTA 2: GESTIONAR MUNICIPIOS -->
+            <div id="vista-municipios" class="vista-oculta">
+                <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1>Directorio de Municipios</h1>
+                        <p>Visualiza y administra todos los datos de los pueblos.</p>
+                    </div>
+                    <button class="btn-primary" onclick="abrirFormLugar()">➕ Registrar Pueblo</button>
+                </header>
+
+                <section class="form-card vista-oculta" id="panel-form-lugar" style="margin-bottom: 30px;">
+                    <h2 id="lugar-form-title" style="margin-bottom: 20px; font-size: 18px;">Detalles del Municipio</h2>
+                    <form id="formLugar">
+                        <input type="hidden" id="lugar-id">
+                        
+                        <div class="form-section-divider">Información Principal</div>
+                        <div class="form-row">
+                            <div class="form-group flex-1"><label>Nombre</label><input type="text" id="lugar-nombre" required></div>
+                            <div class="form-group flex-1"><label>Subtítulo</label><input type="text" id="lugar-subtitulo"></div>
+                            <div class="form-group flex-1"><label>Categoría</label>
+                                <select id="lugar-categoria" required>
+                                    <option value="TODOS">TODOS</option>
+                                    <option value="PUEBLO">PUEBLO</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label>URL de Imagen de Portada</label>
+                            <input type="url" id="lugar-imagen" placeholder="Ej. https://firebasestorage.googleapis.com/.../foto.jpg">
+                        </div>
+                        <div class="form-group">
+                            <label>Historia & Esencia</label>
+                            <textarea id="lugar-historia" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-section-divider">Ubicación y Entorno</div>
+                        <div class="form-row">
+                            <div class="form-group flex-1"><label>Ubicación Corta (Ej. Ahuachapán)</label><input type="text" id="lugar-ubiCorta"></div>
+                            <div class="form-group flex-1"><label>Ubicación Larga (Ej. Ahuachapán, El Salvador)</label><input type="text" id="lugar-ubiLarga"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-1"><label>Elevación</label><input type="text" id="lugar-elevacion"></div>
+                            <div class="form-group flex-1"><label>Clima</label><input type="text" id="lugar-clima"></div>
+                            <div class="form-group flex-1"><label>Latitud</label><input type="number" step="any" id="lugar-lat"></div>
+                            <div class="form-group flex-1"><label>Longitud</label><input type="number" step="any" id="lugar-lng"></div>
+                        </div>
+
+                        <div class="form-section-divider">Rating y Temporada</div>
+                        <div class="form-row">
+                            <div class="form-group flex-1"><label>Calificación (Ej. 4.8)</label><input type="number" step="0.1" id="lugar-calificacion"></div>
+                            <div class="form-group flex-1"><label>Cant. Reseñas</label><input type="number" id="lugar-resenas"></div>
+                            <div class="form-group flex-1"><label>Mejor Temp. (Título)</label><input type="text" id="lugar-tempTit"></div>
+                            <div class="form-group flex-1"><label>Mejor Temp. (Desc)</label><input type="text" id="lugar-tempDesc"></div>
+                        </div>
+
+                        <div class="form-section-divider">Estadísticas del Directorio</div>
+                        <div class="form-row">
+                            <div class="form-group flex-1"><label>Título Tarjeta</label><input type="text" id="stat-titGral"></div>
+                            <div class="form-group flex-2"><label>Descripción Tarjeta</label><input type="text" id="stat-descGral"></div>
+                        </div>
+                        <div class="form-row" style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                            <div class="form-group flex-1"><label>Stat 1 (Icono | Texto)</label><input type="text" id="st1-ico" placeholder="LocalCafe"><input type="text" id="st1-txt" style="margin-top:5px;" placeholder="14 Cafés"></div>
+                            <div class="form-group flex-1"><label>Stat 2 (Icono | Texto)</label><input type="text" id="st2-ico" placeholder="Home"><input type="text" id="st2-txt" style="margin-top:5px;" placeholder="12 Hoteles"></div>
+                            <div class="form-group flex-1"><label>Stat 3 (Icono | Texto)</label><input type="text" id="st3-ico" placeholder="Restaurant"><input type="text" id="st3-txt" style="margin-top:5px;" placeholder="8 Restaurantes"></div>
+                            <div class="form-group flex-1"><label>Stat 4 (Icono | Texto)</label><input type="text" id="st4-ico" placeholder="Brush"><input type="text" id="st4-txt" style="margin-top:5px;" placeholder="4 Talleres"></div>
+                        </div>
+
+                        <div class="form-section-divider">Atractivos (Estructura JSON)</div>
+                        <div class="form-group">
+                            <label>Array de Atractivos</label>
+                            <textarea id="lugar-atractivos-json" rows="4" placeholder='[{"id":"ata1", "titulo":"Murales", ...}]'></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="cerrarFormLugar()" style="margin-right: 10px;">Cancelar</button>
+                            <button type="submit" class="btn-primary">💾 Guardar Registro</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="form-card" id="panel-tabla-lugares">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Municipio</th>
+                                <th>Categoría</th>
+                                <th>Rating</th>
+                                <th>Clima</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-municipios-body">
+                            <!-- Se renderiza dinámicamente -->
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- VISTA 3: USUARIOS -->
+            <div id="vista-usuarios" class="vista-oculta">
+                <header class="page-header">
+                    <div>
+                        <h1>Usuarios Registrados</h1>
+                        <p>Administra los permisos de acceso a la aplicación.</p>
+                    </div>
+                </header>
+                <section class="form-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Correo</th>
+                                <th>Rol Actual</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-usuarios-body">
+                            <!-- Renderizado dinámicamente -->
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script th:src="@{/js/admin.js}"></script>
+</body>
+</html>

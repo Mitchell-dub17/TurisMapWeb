@@ -1,0 +1,38 @@
+:root {
+    --primary: #4f46e5;
+    --dark: #0f172a;
+    --light: #f8fafc;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { background-color: var(--light); color: var(--dark); }
+
+nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.logo { font-size: 24px; font-weight: 800; color: var(--primary); }
+.nav-links a { margin-left: 20px; text-decoration: none; color: var(--dark); font-weight: 600; }
+.btn-login { background: var(--dark); color: white !important; padding: 10px 20px; border-radius: 8px; }
+
+.hero { display: flex; align-items: center; justify-content: space-between; padding: 80px 5%; background: linear-gradient(135deg, #e0e7ff, #f8fafc); }
+.hero-text { max-width: 50%; }
+.hero-text h1 { font-size: 48px; font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+.hero-text p { font-size: 18px; color: #475569; margin-bottom: 30px; }
+.download-buttons { display: flex; gap: 15px; }
+.btn-download { display: flex; align-items: center; gap: 10px; background: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; color: var(--dark); font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: transform 0.2s; }
+.btn-download:hover { transform: translateY(-3px); }
+.hero-image { width: 40%; background: #cbd5e1; height: 400px; border-radius: 20px; display: flex; justify-content: center; align-items: center; color: #64748b; font-weight: 600; }
+
+.business-section { padding: 80px 5%; text-align: center; }
+.business-section h2 { font-size: 36px; margin-bottom: 15px; }
+.business-section > p { color: #475569; margin-bottom: 50px; font-size: 18px; }
+
+.plans-container { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+.plan-card { background: white; padding: 40px; border-radius: 20px; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; border: 1px solid #e2e8f0; }
+.plan-card.premium { border: 2px solid var(--primary); transform: scale(1.05); }
+.plan-title { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+.plan-price { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 20px; }
+.plan-price span { font-size: 16px; color: #64748b; }
+.plan-features { list-style: none; margin-bottom: 30px; }
+.plan-features li { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; color: #475569; }
+.btn-plan { display: block; text-align: center; background: #f1f5f9; color: var(--dark); padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+.premium .btn-plan { background: var(--primary); color: white; }
+
+footer { background: var(--dark); color: white; text-align: center; padding: 30px; margin-top: 50px; }

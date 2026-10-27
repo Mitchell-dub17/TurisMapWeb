@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurisMap - Portal de Socios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/portal-cliente.css}">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <span>🗺️</span> TurisMap Socios
+        </div>
+        <nav>
+            <a href="#" class="active">📊 Panel General</a>
+            <a href="#">📝 Editar Información</a>
+            <a href="#">📸 Galería y Menú</a>
+            <a href="#">⭐ Reseñas</a>
+            <a href="#" onclick="cerrarSesion()" style="color: #ef4444; margin-top: 20px;">
+                🚪 Cerrar Sesión
+            </a>
+        </nav>
+        
+        <div class="plan-badge">
+            <span>👑 Plan Premium</span>
+            Activo hasta: Dic 2026
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div>
+                <h1>¡Hola, Café de la Abuela! 👋</h1>
+                <p>Aquí tienes un resumen de cómo le va a tu negocio en Ataco.</p>
+            </div>
+            <button class="btn-view">👁️ Ver mi perfil público</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Vistas este mes</div>
+                <div class="stat-value">1,248</div>
+                <div class="stat-trend">↑ +14% vs mes anterior</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Clics en "Cómo llegar"</div>
+                <div class="stat-value">342</div>
+                <div class="stat-trend">↑ +5% vs mes anterior</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Guardados en Favoritos</div>
+                <div class="stat-value">89</div>
+                <div class="stat-trend" style="color: #64748b;">Manteniéndose</div>
+            </div>
+        </div>
+
+        <div class="edit-section clearfix">
+            <h2>Actualizar Información del Negocio</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Estado actual</label>
+                    <select>
+                        <option>🟢 Abierto recibiendo clientes</option>
+                        <option>🔴 Cerrado temporalmente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono de Contacto (Público)</label>
+                    <input type="tel" value="7000-1234">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Descripción u Oferta Especial del Mes</label>
+                <textarea rows="3">Disfruta de nuestro nuevo café cultivado en las montañas de Apaneca. ¡Muestra la app TurisMap y recibe un 10% de descuento en tu segunda taza!</textarea>
+            </div>
+
+            <button class="btn-save">Guardar Cambios</button>
+        </div>
+    </main>
+    <script th:src="@{/js/portal-cliente.js}"></script>
+</body>
+</html>

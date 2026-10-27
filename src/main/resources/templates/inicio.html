@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurisMap - Descubre la Ruta de las Flores</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/inicio.css}">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">🗺️ TurisMap</div>
+        <div class="nav-links">
+            <a href="#turistas">Para Turistas</a>
+            <a href="#negocios">Para Negocios</a>
+            <a th:href="@{/login}" class="btn-login">Iniciar Sesión</a>
+        </div>
+    </nav>
+
+    <section class="hero" id="turistas">
+        <div class="hero-text">
+            <h1>Tu guía definitiva para la Ruta de las Flores</h1>
+            <p>Descubre cascadas ocultas, los mejores cafés y hoteles boutique. Todo El Salvador en la palma de tu mano con TurisMap.</p>
+            <div class="download-buttons">
+                <a href="#" class="btn-download">
+                    <span>📱</span> Descargar Android
+                </a>
+                <a href="#" class="btn-download">
+                    <span>🍎</span> Descargar iOS
+                </a>
+            </div>
+        </div>
+        <div class="hero-image">
+            [ Aquí irá una foto genial de la App en un celular ]
+        </div>
+    </section>
+
+    <section class="business-section" id="negocios">
+        <h2>¿Tienes un negocio en la Ruta?</h2>
+        <p>Impulsa tus ventas llegando a miles de turistas que usan TurisMap a diario. Elige el plan ideal para ti.</p>
+        
+        <div class="plans-container">
+            <div class="plan-card">
+                <div class="plan-title">Presencia Básica</div>
+                <div class="plan-price">$5 <span>/mes</span></div>
+                <ul class="plan-features">
+                    <li>✔️ Aparición en el mapa</li>
+                    <li>✔️ Nombre y dirección</li>
+                    <li>✔️ 1 Fotografía</li>
+                    <li>❌ Panel de control propio</li>
+                </ul>
+                <a href="#" class="btn-plan">Comenzar Gratis</a>
+            </div>
+
+            <div class="plan-card premium">
+                <div class="plan-title">Socio </div>
+                <div class="plan-price">$15 <span>/mes</span></div>
+                <ul class="plan-features">
+                    <li>✔️ Posicionamiento destacado</li>
+                    <li>✔️ Menú y enlaces directos</li>
+                    <li>✔️ Acceso al Panel de Cliente</li>
+                </ul>
+                <a href="#" class="btn-plan">Impulsar mi Negocio</a>
+            </div>
+
+            <div class="plan-card premium">
+                <div class="plan-title">Socio Premium</div>
+                <div class="plan-price">$25 <span>/mes</span></div>
+                <ul class="plan-features">
+                    <li>✔️ Posicionamiento destacado</li>
+                    <li>✔ Galería de fotos ilimitada</li>
+                    <li>✔️ Menú y enlaces directos</li>
+                    <li>✔️ Acceso al Panel de Cliente</li>
+                </ul>
+                <a href="#" class="btn-plan">Impulsar mi Negocio</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 TurisMap El Salvador. Todos los derechos reservados.</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# Eclipse
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Firebase (NO COMMIT CREDENCIALES REALES)
+firebase-service-account.json
+
+# Application Properties (opcional, si contiene datos sensibles)
+# application.properties
+
+# Spring Boot
+spring-boot-*.log
+
+# --- Blindaje Automático Asistente Dev ---
+*.txt
+dev.py
+.dev_backups/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.p8
+*.jks
+*.keystore
+*.mobileprovision
+id_rsa*
+id_ed25519*
+*.ppk
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!composer.json
+!manifest.json
+google-services.json
+GoogleService-Info.plist
+*secret*
+*credential*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.sqlite
+*.sqlite3
+*.db
+*.sql
+*~
+desktop.ini
+.gradle/
+node_modules/
+venv/
+.venv/
+__pycache__/
