@@ -31,24 +31,25 @@ public class UsuarioController {
                 });
     }
 
-    @PutMapping("/{email}/rol")
+    @PutMapping("/{id}/rol")
     @PreAuthorize("hasRole('ADMIN')")
-    public CompletableFuture<ResponseEntity<?>> ascenderAdmin(@PathVariable String email, @RequestBody Map<String, String> body) {
-        CompletableFuture<ResponseEntity<?>> future = new CompletableFuture<>();
-        Firestore db = FirestoreClient.getFirestore();
-        
-        db.collection("usuarios").whereEqualTo("email", email).get().addListener(() -> {
-            try {
-                for (QueryDocumentSnapshot doc : db.collection("usuarios").whereEqualTo("email", email).get().get().getDocuments()) {
-                    doc.getReference().update("rol", body.get("nuevoRol"));
-                }
-                future.complete(ResponseEntity.ok().body(Map.of("message", "Rol actualizado exitosamente")));
-            } catch (Exception e) {
-                log.error("Error actualizando rol: ", e);
-                future.complete(ResponseEntity.status(500).build());
-            }
-        }, Runnable::run);
-        
-        return future;
+    public CompletableFuture<ResponseEntity<?>> cambiarRolUsuario(@PathVariable String id, @RequestBody Map<String, String> body) {
+        return usuarioFirestoreService.cambiarRol(id, body.get("nuevoRol"))
+                .<ResponseEntity<?>>thenApply(u -> ResponseEntity.ok(Map.of("message", "Rol actualizado exitosamente")))
+                .exceptionally(ex -> {
+                    log.error("Error actualizando rol: ", ex);
+                    return ResponseEntity.status(500).build();
+                });
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public CompletableFuture<ResponseEntity<?>> eliminarUsuario(@PathVariable String id) {
+        return usuarioFirestoreService.eliminarUsuario(id)
+                .<ResponseEntity<?>>thenApply(v -> ResponseEntity.ok(Map.of("message", "Usuario eliminado")))
+                .exceptionally(ex -> {
+                    log.error("Error al eliminar usuario: ", ex);
+                    return ResponseEntity.status(500).build();
+                });
     }
 }

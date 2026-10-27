@@ -15,6 +15,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioFirestore {
+    private String id;
+
     @Email(message = "El correo debe ser válido")
     @NotBlank(message = "El correo es obligatorio")
     private String email;

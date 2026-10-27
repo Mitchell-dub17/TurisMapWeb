@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     cargarComercios(); // Cargar negocios al iniciar
+    cargarMunicipios(); // Cargar municipios para poblar selectores
 });
 
 // Navegación entre las vistas del panel
@@ -100,6 +101,10 @@ async function fetchAutenticado(url, opciones = {}) {
         );
     }
 
+    if (!respuesta.ok) {
+        throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+
     return respuesta;
 }
 
@@ -133,6 +138,18 @@ async function cargarMunicipios() {
 
 function renderMunicipios() {
     const tbody = document.getElementById('tabla-municipios-body');
+    const selectMunicipio = document.getElementById('municipio');
+    
+    if (selectMunicipio) {
+        selectMunicipio.innerHTML = '<option value="">Selecciona ubicación...</option>';
+        lugaresCache.forEach(lugar => {
+            const option = document.createElement('option');
+            option.value = lugar.id;
+            option.textContent = lugar.nombre;
+            selectMunicipio.appendChild(option);
+        });
+    }
+
     if (!tbody) return;
     
     tbody.innerHTML = '';
@@ -156,6 +173,8 @@ window.abrirFormLugar = function() {
     document.getElementById('formLugar').reset();
     document.getElementById('lugar-id').value = '';
     document.getElementById('lugar-form-title').innerText = 'Registrar Nuevo Municipio';
+    document.getElementById('atractivos-container').innerHTML = '';
+    agregarAtractivoFila();
     document.getElementById('panel-tabla-lugares').classList.add('vista-oculta');
     document.getElementById('panel-form-lugar').classList.remove('vista-oculta');
 };
@@ -207,10 +226,12 @@ window.editarLugarCompleto = function(id) {
         document.getElementById('st4-txt').value = lugar.directorioStats.stat4Texto || '';
     }
     
-    if (lugar.atractivos) {
-        document.getElementById('lugar-atractivos-json').value = JSON.stringify(lugar.atractivos, null, 2);
+    const container = document.getElementById('atractivos-container');
+    container.innerHTML = '';
+    if (lugar.atractivos && lugar.atractivos.length > 0) {
+        lugar.atractivos.forEach(atractivo => agregarAtractivoFila(atractivo));
     } else {
-        document.getElementById('lugar-atractivos-json').value = '';
+        agregarAtractivoFila();
     }
 
     document.getElementById('lugar-form-title').innerText = 'Editar Datos: ' + lugar.nombre;
@@ -228,6 +249,46 @@ window.eliminarLugar = async function(id) {
     }
 };
 
+window.agregarAtractivoFila = function(atractivo = null) {
+    const container = document.getElementById('atractivos-container');
+    const div = document.createElement('div');
+    div.className = 'atractivo-row';
+    div.style.marginBottom = '15px';
+    div.style.padding = '15px';
+    div.style.background = '#f8fafc';
+    div.style.border = '1px solid #cbd5e1';
+    div.style.borderRadius = '8px';
+    
+    const idValue = atractivo?.id || '';
+    const titulo = atractivo?.titulo || '';
+    const descripcion = atractivo?.descripcion || '';
+    const etiqueta = atractivo?.etiqueta || '';
+    const accion = atractivo?.accion || 'Ver más →';
+    const imagenUrl = atractivo?.imagenUrl || '';
+    const colorHex = atractivo?.etiquetaColorHex || 4279986484;
+    
+    div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color:var(--primary);">Atractivo</strong>
+            <button type="button" class="btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="this.parentElement.parentElement.remove()">X Eliminar</button>
+        </div>
+        <input type="hidden" class="atr-id" value="${idValue}">
+        <input type="hidden" class="atr-color" value="${colorHex}">
+        <div class="form-row" style="margin-bottom: 10px;">
+            <div class="form-group flex-1"><label>Título</label><input type="text" class="atr-titulo" value="${titulo}" required></div>
+            <div class="form-group flex-1"><label>Etiqueta</label><input type="text" class="atr-etiqueta" value="${etiqueta}" required></div>
+            <div class="form-group flex-1"><label>Acción</label><input type="text" class="atr-accion" value="${accion}" required></div>
+        </div>
+        <div class="form-row" style="margin-bottom: 10px;">
+            <div class="form-group flex-2"><label>Descripción</label><input type="text" class="atr-descripcion" value="${descripcion}" required></div>
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+            <div class="form-group flex-1"><label>URL de Imagen</label><input type="url" class="atr-imagen" value="${imagenUrl}"></div>
+        </div>
+    `;
+    container.appendChild(div);
+};
+
 document.getElementById('formLugar')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = this.querySelector('button[type="submit"]');
@@ -236,16 +297,21 @@ document.getElementById('formLugar')?.addEventListener('submit', async function(
 
     const id = document.getElementById('lugar-id').value;
     
-    let atractivos = null;
-    try {
-        const atTxt = document.getElementById('lugar-atractivos-json').value.trim();
-        if(atTxt) atractivos = JSON.parse(atTxt);
-    } catch(e) {
-        alert('El JSON de Atractivos es inválido. Corrige la sintaxis.');
-        btn.disabled = false;
-        btn.textContent = '💾 Guardar Registro';
-        return;
-    }
+    let atractivos = [];
+    document.querySelectorAll('.atractivo-row').forEach(row => {
+        let atrId = row.querySelector('.atr-id').value;
+        if (!atrId) atrId = 'atr_' + Math.random().toString(36).substr(2, 9);
+        
+        atractivos.push({
+            id: atrId,
+            etiqueta: row.querySelector('.atr-etiqueta').value,
+            etiquetaColorHex: parseInt(row.querySelector('.atr-color').value) || 4279986484,
+            titulo: row.querySelector('.atr-titulo').value,
+            descripcion: row.querySelector('.atr-descripcion').value,
+            accion: row.querySelector('.atr-accion').value,
+            imagenUrl: row.querySelector('.atr-imagen').value
+        });
+    });
 
     const lugarPayload = {
         nombre: document.getElementById('lugar-nombre').value,
@@ -323,75 +389,143 @@ function renderUsuarios() {
     tbody.innerHTML = '';
     usuariosCache.forEach(usuario => {
         const tr = document.createElement('tr');
-        const esAdmin = usuario.rol.toLowerCase() === 'admin';
-        const badgeClass = esAdmin ? 'badge-admin' : 'badge-user';
-        const btnHtml = esAdmin 
-            ? '-' 
-            : `<button class="btn-danger" onclick="ascenderAdmin('${usuario.email}')">Ascender a Admin</button>`;
-
+        const rolNormalizado = (usuario.rol || '').toLowerCase();
+        
         tr.innerHTML = `
             <td><div class="table-main-text">${usuario.nombre || 'Sin nombre'}</div></td>
             <td>${usuario.email}</td>
-            <td><span class="badge ${badgeClass}">${usuario.rol}</span></td>
-            <td>${btnHtml}</td>
+            <td>
+                <select onchange="cambiarRolUsuario('${usuario.id}', this.value)" style="width: 120px; padding: 6px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <option value="admin" ${rolNormalizado === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="cliente" ${rolNormalizado === 'cliente' ? 'selected' : ''}>Cliente</option>
+                    <option value="viajero" ${rolNormalizado === 'viajero' ? 'selected' : ''}>Viajero</option>
+                </select>
+            </td>
+            <td>
+                <button class="btn-danger" onclick="eliminarUsuarioPlataforma('${usuario.id}')">Dar de baja</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-window.ascenderAdmin = async function(email) {
-    if(!confirm(`¿Estás seguro de ascender a ${email} como Administrador?`)) return;
+window.cambiarRolUsuario = async function(id, nuevoRol) {
+    if(!confirm(`¿Estás seguro de cambiar el rol a ${nuevoRol}?`)) {
+        cargarUsuarios(); // Refresca para revertir el selector a su estado inicial
+        return;
+    }
     try {
-        await fetchAutenticado(`/api/usuarios/${email}/rol`, {
+        await fetchAutenticado(`/api/usuarios/${id}/rol`, {
             method: 'PUT',
-            body: JSON.stringify({ nuevoRol: 'admin' })
+            body: JSON.stringify({ nuevoRol: nuevoRol })
         });
-        alert('Usuario ascendido a administrador en la base de datos.');
+        alert('Rol modificado exitosamente.');
         cargarUsuarios();
     } catch (error) {
-        console.error('Error al ascender:', error);
+        console.error('Error al cambiar rol:', error);
         alert('Error al modificar el rol del usuario.');
+        cargarUsuarios();
     }
 };
 
-// --- LÓGICA DE AGREGAR NEGOCIO ---
+window.eliminarUsuarioPlataforma = async function(id) {
+    if(!confirm('¿Estás seguro de dar de baja a este usuario permanentemente?')) return;
+    try {
+        await fetchAutenticado(`/api/usuarios/${id}`, { method: 'DELETE' });
+        alert('Usuario eliminado correctamente.');
+        cargarUsuarios();
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        alert('Error al eliminar el usuario.');
+    }
+};
+
+// --- LÓGICA DE AGREGAR/EDITAR NEGOCIO ---
+window.cancelarEdicionComercio = function() {
+    document.getElementById('formAgregarNegocio').reset();
+    document.getElementById('comercio-id').value = '';
+    document.getElementById('btn-cancelar-comercio').style.display = 'none';
+    document.getElementById('btn-submit-comercio').textContent = '✨ Guardar en Firebase';
+};
+
+window.editarComercio = function(id) {
+    const com = comerciosCache.find(c => c.id === id);
+    if (!com) return;
+
+    document.getElementById('comercio-id').value = com.id;
+    document.getElementById('nombre').value = com.nombre || '';
+    document.getElementById('municipio').value = com.lugarId || '';
+    document.getElementById('tipo').value = com.categoria || '';
+    document.getElementById('descripcion').value = com.descripcion || '';
+    document.getElementById('direccion').value = com.direccion || '';
+    document.getElementById('telefono').value = com.telefono || '';
+    document.getElementById('sitioWeb').value = com.sitioWeb || '';
+    document.getElementById('horario').value = com.horario || '';
+    document.getElementById('precioDesde').value = com.precioDesde || '';
+    document.getElementById('llamativo').value = (com.servicios || []).join(', ');
+    document.getElementById('imagenUrls').value = (com.imagenUrls || []).join(', ');
+    document.getElementById('propietarioUid').value = com.propietarioUid || '';
+
+    document.getElementById('btn-cancelar-comercio').style.display = 'inline-block';
+    document.getElementById('btn-submit-comercio').textContent = '💾 Guardar Cambios';
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 document.getElementById('formAgregarNegocio')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const btn = this.querySelector('button[type="submit"]');
+    const btn = document.getElementById('btn-submit-comercio');
     btn.disabled = true;
     btn.textContent = 'Guardando...';
 
-    const comercio = {
-        nombre: document.getElementById('nombre').value,
-        lugarId: document.getElementById('municipio').value,
-        categoria: document.getElementById('tipo').value,
-        descripcion: document.getElementById('descripcion').value,
-        direccion: document.getElementById('direccion').value,
-        telefono: document.getElementById('telefono').value,
-        sitioWeb: document.getElementById('sitioWeb').value,
-        horario: document.getElementById('horario').value,
-        precioDesde: parseFloat(document.getElementById('precioDesde').value) || 0,
-        servicios: document.getElementById('llamativo').value.split(',').map(s => s.trim()).filter(Boolean),
-        imagenUrls: document.getElementById('imagenUrls').value.split(',').map(s => s.trim()).filter(Boolean),
-        propietarioUid: document.getElementById('propietarioUid').value,
-        estado: 'pendiente',
-        destacado: false
-    };
+    const id = document.getElementById('comercio-id').value;
+    let comercio = {};
+    
+    // Recuperar los datos originales para no perder el "estado" y evitar errores de validación de Spring
+    if (id) {
+        const original = comerciosCache.find(c => c.id === id);
+        if (original) {
+            comercio = { ...original };
+            delete comercio.creadoEn; // Evita el fallo de parseo de Timestamp en Jackson (Spring Boot)
+            delete comercio.actualizadoEn;
+        }
+    } else {
+        comercio.estado = 'pendiente';
+        comercio.destacado = false;
+    }
+
+    // Sobrescribir con los datos del formulario
+    comercio.nombre = document.getElementById('nombre').value;
+    comercio.lugarId = document.getElementById('municipio').value;
+    comercio.categoria = document.getElementById('tipo').value;
+    comercio.descripcion = document.getElementById('descripcion').value;
+    comercio.direccion = document.getElementById('direccion').value;
+    comercio.telefono = document.getElementById('telefono').value;
+    comercio.sitioWeb = document.getElementById('sitioWeb').value;
+    comercio.horario = document.getElementById('horario').value;
+    comercio.precioDesde = parseFloat(document.getElementById('precioDesde').value) || 0;
+    comercio.servicios = document.getElementById('llamativo').value.split(',').map(s => s.trim()).filter(Boolean);
+    comercio.imagenUrls = document.getElementById('imagenUrls').value.split(',').map(s => s.trim()).filter(Boolean);
+    comercio.propietarioUid = document.getElementById('propietarioUid').value;
 
     try {
-        await fetchAutenticado('/api/comercios', {
-            method: 'POST',
+        const url = id ? `/api/comercios/${id}` : '/api/comercios';
+        const method = id ? 'PUT' : 'POST';
+        
+        await fetchAutenticado(url, {
+            method: method,
             body: JSON.stringify(comercio)
         });
-        alert('Negocio registrado exitosamente en la base de datos.');
-        this.reset();
+        
+        alert(id ? 'Comercio actualizado correctamente.' : 'Negocio registrado exitosamente.');
+        cancelarEdicionComercio();
         cargarComercios();
     } catch (error) {
         console.error('Error al guardar negocio:', error);
-        alert('Error al registrar el negocio.');
+        alert('Error al guardar el negocio.');
     } finally {
         btn.disabled = false;
-        btn.textContent = '✨ Guardar en Firebase';
+        btn.textContent = document.getElementById('comercio-id').value ? '💾 Guardar Cambios' : '✨ Guardar en Firebase';
     }
 });
 
@@ -421,8 +555,9 @@ function renderComercios() {
             <td>${com.categoria}</td>
             <td><span class="badge ${estadoClase}">${com.estado}</span></td>
             <td>
+                <button class="btn-secondary" style="margin-right: 5px;" onclick="editarComercio('${com.id}')">Editar</button>
                 <button class="btn-danger" onclick="eliminarComercio('${com.id}')">Eliminar</button>
-                ${com.estado !== 'publicado' ? `<button class="btn-secondary" onclick="publicarComercio('${com.id}')">Publicar</button>` : ''}
+                ${com.estado !== 'publicado' ? `<button class="btn-secondary" style="margin-left: 5px;" onclick="publicarComercio('${com.id}')">Publicar</button>` : ''}
             </td>
         `;
         tbody.appendChild(tr);

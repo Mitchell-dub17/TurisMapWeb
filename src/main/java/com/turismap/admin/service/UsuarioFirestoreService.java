@@ -40,7 +40,23 @@ public class UsuarioFirestoreService {
     }
 
     public CompletableFuture<List<UsuarioFirestore>> obtenerTodosUsuarios() {
-        return firestoreRepository.findAll(COLLECTION, UsuarioFirestore.class);
+        CompletableFuture<List<UsuarioFirestore>> future = new CompletableFuture<>();
+        firestoreRepository.getCollection(COLLECTION).get().addListener(() -> {
+            try {
+                java.util.List<UsuarioFirestore> results = new java.util.ArrayList<>();
+                for (com.google.cloud.firestore.DocumentSnapshot doc : firestoreRepository.getCollection(COLLECTION).get().get().getDocuments()) {
+                    UsuarioFirestore user = doc.toObject(UsuarioFirestore.class);
+                    if (user != null) {
+                        user.setId(doc.getId());
+                        results.add(user);
+                    }
+                }
+                future.complete(results);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        }, Runnable::run);
+        return future;
     }
 
     public CompletableFuture<UsuarioFirestore> cambiarRol(String id, String nuevoRol) {

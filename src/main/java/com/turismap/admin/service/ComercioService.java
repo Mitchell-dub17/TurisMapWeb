@@ -40,9 +40,21 @@ public class ComercioService {
     }
 
     public CompletableFuture<Comercio> actualizarComercio(String id, Comercio comercio) {
-        comercio.setId(id);
-        comercio.setActualizadoEn(Timestamp.now());
-        return firestoreRepository.update(COLLECTION, id, comercio);
+        return firestoreRepository.findById(COLLECTION, id, Comercio.class)
+                .thenCompose(existente -> {
+                    if (existente != null) {
+                        comercio.setCreadoEn(existente.getCreadoEn());
+                        if (comercio.getEstado() == null) {
+                            comercio.setEstado(existente.getEstado());
+                        }
+                        if (comercio.getDestacado() == null) {
+                            comercio.setDestacado(existente.getDestacado());
+                        }
+                    }
+                    comercio.setId(id);
+                    comercio.setActualizadoEn(Timestamp.now());
+                    return firestoreRepository.update(COLLECTION, id, comercio);
+                });
     }
 
     public CompletableFuture<Comercio> publicarComercio(String id) {

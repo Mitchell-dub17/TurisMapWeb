@@ -38,6 +38,7 @@
                 </header>
 
                 <form id="formAgregarNegocio">
+                <input type="hidden" id="comercio-id">
                 <div class="form-row">
                     <div class="form-group flex-1">
                         <label for="nombre">Nombre del Establecimiento</label>
@@ -47,11 +48,7 @@
                         <label for="municipio">Municipio</label>
                         <select id="municipio" required>
                             <option value="">Selecciona ubicación...</option>
-                            <option value="ataco">Concepción de Ataco</option>
-                            <option value="apaneca">Apaneca</option>
-                            <option value="juayua">Juayúa</option>
-                            <option value="salcoatitan">Salcoatitán</option>
-                            <option value="nahuizalco">Nahuizalco</option>
+                            <!-- Opciones cargadas dinámicamente por JS -->
                         </select>
                     </div>
                 </div>
@@ -78,52 +75,48 @@
                     <textarea id="descripcion" rows="3" placeholder="Describe el ambiente y qué ofrece el lugar..."></textarea>
                 </div>
 
-                <div class="form-section-divider">Datos Internos del Propietario</div>
+                <div class="form-section-divider">Datos de Contacto y Operación</div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="nombre-dueno">Nombre Completo</label>
-                        <input type="text" id="nombre-dueno" placeholder="Ej. María Pérez" required>
+                        <label for="direccion">Dirección Física</label>
+                        <input type="text" id="direccion" placeholder="Ej. 2da Avenida Norte" required>
                     </div>
                     <div class="form-group">
-                        <label for="telefono-dueno">Teléfono (WhatsApp)</label>
-                        <input type="tel" id="telefono-dueno" placeholder="Ej. 7000-0000" required>
+                        <label for="telefono">Teléfono de Contacto</label>
+                        <input type="tel" id="telefono" placeholder="Ej. 7000-0000" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sitioWeb">Sitio Web / Red Social</label>
+                        <input type="url" id="sitioWeb" placeholder="Ej. https://facebook.com/minegocio">
                     </div>
                     <div class="form-group">
-                        <label for="correo-dueno">Correo Electrónico</label>
-                        <input type="email" id="correo-dueno" placeholder="Ej. contacto@negocio.com">
+                        <label for="horario">Horario de Atención</label>
+                        <input type="text" id="horario" placeholder="Ej. Lunes a Domingo, 8am - 5pm">
+                    </div>
+                    <div class="form-group">
+                        <label for="precioDesde">Precio Desde ($)</label>
+                        <input type="number" step="0.01" id="precioDesde" placeholder="Ej. 2.50">
                     </div>
                 </div>
 
-                <div class="form-section-divider">Multimedia y Ubicación</div>
+                <div class="form-section-divider">Propietario y Multimedia</div>
                 <div class="form-row">
                     <div class="form-group flex-1">
-                        <label>Fotografías</label>
-                        <div class="upload-area">
-                            <input type="file" id="fotos" accept="image/png, image/jpeg" multiple required>
-                            <div class="upload-text">
-                                <div style="font-size: 24px; margin-bottom: 8px;">📸</div>
-                                <span>Haz clic o arrastra fotos aquí</span>
-                            </div>
-                        </div>
+                        <label for="propietarioUid">UID del Propietario (Firebase Auth)</label>
+                        <input type="text" id="propietarioUid" placeholder="ID del usuario dueño del negocio" required>
                     </div>
                     <div class="form-group flex-1">
-                        <label>Ubicación en el Mapa</label>
-                        <div id="mapa-interactivo" class="map-placeholder">
-                            <span>🗺️ Vista previa del mapa</span>
-                        </div>
-                        <div class="form-row mt-2">
-                            <div class="form-group">
-                                <input type="text" id="latitud" placeholder="Latitud" readonly>
-                            </div>
-                            <div class="form-group">
-                                <input type="text" id="longitud" placeholder="Longitud" readonly>
-                            </div>
-                        </div>
+                        <label for="imagenUrls">URLs de Imágenes (Separadas por coma)</label>
+                        <input type="text" id="imagenUrls" placeholder="Ej. https://dominio.com/foto1.jpg, https://..." required>
+                        <small style="color:var(--text-muted); display:block; margin-top:5px;">Usa URLs HTTPS públicas.</small>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary">✨ Guardar en Firebase</button>
+                    <button type="button" class="btn-secondary" id="btn-cancelar-comercio" style="display: none; margin-right: 10px;" onclick="cancelarEdicionComercio()">Cancelar Edición</button>
+                    <button type="submit" class="btn-primary" id="btn-submit-comercio">✨ Guardar en Firebase</button>
                 </div>
                 </form>
 
@@ -212,11 +205,11 @@
                             <div class="form-group flex-1"><label>Stat 4 (Icono | Texto)</label><input type="text" id="st4-ico" placeholder="Brush"><input type="text" id="st4-txt" style="margin-top:5px;" placeholder="4 Talleres"></div>
                         </div>
 
-                        <div class="form-section-divider">Atractivos (Estructura JSON)</div>
-                        <div class="form-group">
-                            <label>Array de Atractivos</label>
-                            <textarea id="lugar-atractivos-json" rows="4" placeholder='[{"id":"ata1", "titulo":"Murales", ...}]'></textarea>
+                        <div class="form-section-divider">Atractivos del Lugar</div>
+                        <div id="atractivos-container">
+                            <!-- Filas de atractivos generadas por JS -->
                         </div>
+                        <button type="button" class="btn-secondary" style="margin-top: 10px;" onclick="agregarAtractivoFila()">+ Añadir Atractivo</button>
 
                         <div class="form-actions">
                             <button type="button" class="btn-secondary" onclick="cerrarFormLugar()" style="margin-right: 10px;">Cancelar</button>
