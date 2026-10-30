@@ -5,39 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TurisMap - Centro de Control</title>
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <style>
+        .nav-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-icon">🗺️</div>
-                <h2>TurisMap Admin</h2>
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                </svg>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="#" id="nav-negocios" class="active" onclick="cambiarVista('negocios')"><span>📍</span> Agregar Negocio</a></li>
-                    <li><a href="#" id="nav-municipios" onclick="cambiarVista('municipios')"><span>⛅</span> Gestionar Pueblos</a></li>
-                    <li><a href="#" id="nav-usuarios" onclick="cambiarVista('usuarios')"><span>👥</span> Usuarios y Roles</a></li>
-                    <li style="margin-top: 30px;">
-                        <a href="#" onclick="cerrarSesion()" style="color: #ef4444;">
-                            <span>🚪</span> Cerrar Sesión
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+            <h2>TurisMap Admin</h2>
+        </div>
+        <nav>
+            <ul>
+                <li>
+                    <a href="#" id="nav-negocios" class="active" onclick="cambiarVista('negocios')">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </span> Agregar Negocio
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-municipios" onclick="cambiarVista('municipios')">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 21h18"></path>
+                                    <path d="M5 21V7l7-4 7 4v14"></path>
+                                    <path d="M9 10h6v11H9z"></path>
+                                </svg>
+                            </span> Gestionar Pueblos
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-usuarios" onclick="cambiarVista('usuarios')">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </span> Usuarios y Roles
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-registrados" onclick="cambiarVista('registrados')">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                                </svg>
+                            </span> Negocios Registrados
+                    </a>
+                </li>
+                <li style="margin-top: 30px;">
+                    <a href="#" onclick="cerrarSesion()" style="color: #ef4444;">
+                            <span class="nav-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span> Cerrar Sesión
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
 
-        <main class="main-content">
-            <!-- VISTA 1: AGREGAR NEGOCIO -->
-            <div id="vista-negocios" class="vista-activa fade-in">
-                <header class="page-header">
-                    <div>
-                        <h1>Registrar en Directorio</h1>
-                        <p>Añade nuevos atractivos, hoteles o restaurantes a la Ruta de las Flores.</p>
-                    </div>
-                </header>
+    <main class="main-content">
+        <!-- VISTA 1: AGREGAR / EDITAR NEGOCIO -->
+        <div id="vista-negocios" class="vista-activa fade-in">
+            <header class="page-header">
+                <div>
+                    <h1>Registrar en Directorio</h1>
+                    <p>Añade nuevos atractivos, hoteles o restaurantes a la Ruta de las Flores.</p>
 
-                <form id="formAgregarNegocio">
+                </div>
+            </header>
+
+            <form id="formAgregarNegocio">
                 <input type="hidden" id="comercio-id">
                 <div class="form-row">
                     <div class="form-group flex-1">
@@ -48,7 +111,6 @@
                         <label for="municipio">Municipio</label>
                         <select id="municipio" required>
                             <option value="">Selecciona ubicación...</option>
-                            <!-- Opciones cargadas dinámicamente por JS -->
                         </select>
                     </div>
                 </div>
@@ -107,161 +169,292 @@
                         <label for="propietarioUid">UID del Propietario (Firebase Auth)</label>
                         <input type="text" id="propietarioUid" placeholder="ID del usuario dueño del negocio" required>
                     </div>
-                    <div class="form-group flex-1">
-                        <label for="imagenUrls">URLs de Imágenes (Separadas por coma)</label>
-                        <input type="text" id="imagenUrls" placeholder="Ej. https://dominio.com/foto1.jpg, https://..." required>
-                        <small style="color:var(--text-muted); display:block; margin-top:5px;">Usa URLs HTTPS públicas.</small>
+                    <div class="form-section-divider">Fotografías del Establecimiento</div>
+                    <div class="form-group">
+                        <!-- Zona de arrastre y clic -->
+                        <div class="dropzone-box" id="dropzone" onclick="document.getElementById('input-fotos').click()">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <p style="margin: 8px 0 4px 0; font-weight: 600; color: #1e293b; font-size: 14px;">
+                                Haz clic o arrastra las fotos de tu local aquí
+                            </p>
+                            <span style="font-size: 12px; color: #94a3b8;">Formatos JPG, PNG o WebP (hasta 10 MB c/u)</span>
+                            <input type="file" id="input-fotos" accept="image/*" multiple style="display: none;">
+                        </div>
+
+                        <!-- Alternativa Admin: Agregar fotos mediante URL directa -->
+                        <div class="mt-3">
+                            <label class="form-label text-secondary small fw-bold">
+                                <i class="fas fa-link"></i> O agregar imagen mediante URL directa:
+                            </label>
+                            <div class="input-group">
+                                <input type="url"
+                                       id="adminInputUrlDirecta"
+                                       class="form-control form-control-sm"
+                                       placeholder="https://images.unsplash.com/... o enlace directo .jpg/.png">
+                                <button class="btn btn-dark btn-sm" type="button" id="btnAdminAgregarUrl">
+                                    <i class="fas fa-plus"></i> Añadir a la lista
+                                </button>
+                            </div>
+                            <small class="text-muted" style="font-size: 11px;">
+                                Puedes pegar enlaces web directamente mientras se activa Cloud Storage.
+                            </small>
+                        </div>
+
+                        <!-- Contenedor de miniaturas con botón para quitar -->
+                        <div id="contenedor-miniaturas" class="miniaturas-grid"></div>
                     </div>
                 </div>
 
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="btn-cancelar-comercio" style="display: none; margin-right: 10px;" onclick="cancelarEdicionComercio()">Cancelar Edición</button>
-                    <button type="submit" class="btn-primary" id="btn-submit-comercio">✨ Guardar en Firebase</button>
+                    <button type="submit" class="btn-primary" id="btn-submit-comercio">Guardar en Firebase</button>
                 </div>
-                </form>
+            </form>
+            <!-- VISTA: ventada previa de la app -->
 
-                <div class="form-section-divider">Negocios Registrados</div>
-                <section class="form-card" style="margin-top: 20px; max-width: 1000px;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Categoría</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-comercios-body">
-                            <!-- Renderizado dinámico -->
-                        </tbody>
-                    </table>
-                </section>
-            </div>
+            <div class="editor-layout" style="display: flex; gap: 24px; align-items: flex-start;">
 
-            <!-- VISTA 2: GESTIONAR MUNICIPIOS -->
-            <div id="vista-municipios" class="vista-oculta">
-                <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h1>Directorio de Municipios</h1>
-                        <p>Visualiza y administra todos los datos de los pueblos.</p>
-                    </div>
-                    <button class="btn-primary" onclick="abrirFormLugar()">➕ Registrar Pueblo</button>
-                </header>
+                <!-- Tu formulario actual (envuelto en un div con flex: 1.2) -->
+                <div style="flex: 1.2; width: 100%;">
+                    <!-- AQUÍ VA TU <form id="formAgregarNegocio"> ... </form> -->
+                </div>
 
-                <section class="form-card vista-oculta" id="panel-form-lugar" style="margin-bottom: 30px;">
-                    <h2 id="lugar-form-title" style="margin-bottom: 20px; font-size: 18px;">Detalles del Municipio</h2>
-                    <form id="formLugar">
-                        <input type="hidden" id="lugar-id">
-                        
-                        <div class="form-section-divider">Información Principal</div>
-                        <div class="form-row">
-                            <div class="form-group flex-1"><label>Nombre</label><input type="text" id="lugar-nombre" required></div>
-                            <div class="form-group flex-1"><label>Subtítulo</label><input type="text" id="lugar-subtitulo"></div>
-                            <div class="form-group flex-1"><label>Categoría</label>
-                                <select id="lugar-categoria" required>
-                                    <option value="TODOS">TODOS</option>
-                                    <option value="PUEBLO">PUEBLO</option>
-                                </select>
+                <!-- MOCKUP MÓVIL EN TIEMPO REAL -->
+                <div class="preview-container" style="margin-top: 40px; display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <span style="font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">
+            Vista Previa (App TurisMap)
+        </span>
+
+                    <!-- Marco de Teléfono / Tarjeta Mobile -->
+                    <div class="mobile-card-preview">
+                        <div class="preview-img-box">
+                            <img id="prev-imagen" src="https://via.placeholder.com/400x220?text=Sin+Imagen" alt="Portada">
+                            <span class="preview-badge" id="prev-categoria">Restaurante</span>
+                        </div>
+
+                        <div class="preview-body">
+                            <div class="preview-header-row">
+                                <h3 id="prev-nombre">Nombre del Establecimiento</h3>
+                                <div class="preview-rating">⭐ 5.0</div>
+                            </div>
+
+                            <p class="preview-municipio" id="prev-municipio">📍 Municipio seleccionado</p>
+                            <p class="preview-desc" id="prev-descripcion">Aquí se mostrará la descripción del negocio tal como la leerá el turista...</p>
+
+                            <div class="preview-chips" id="prev-chips">
+                                <span class="chip">Vista panorámica</span>
+                            </div>
+
+                            <div class="preview-footer">
+                                <div>
+                                    <span style="font-size: 11px; color: #94a3b8; display: block;">Precio sugerido</span>
+                                    <strong id="prev-precio" style="color: #0f172a; font-size: 16px;">Desde $0.00</strong>
+                                </div>
+                                <button type="button" class="btn-preview-demo">Ver en Mapa</button>
                             </div>
                         </div>
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label>URL de Imagen de Portada</label>
-                            <input type="url" id="lugar-imagen" placeholder="Ej. https://firebasestorage.googleapis.com/.../foto.jpg">
-                        </div>
-                        <div class="form-group">
-                            <label>Historia & Esencia</label>
-                            <textarea id="lugar-historia" rows="3"></textarea>
-                        </div>
-
-                        <div class="form-section-divider">Ubicación y Entorno</div>
-                        <div class="form-row">
-                            <div class="form-group flex-1"><label>Ubicación Corta (Ej. Ahuachapán)</label><input type="text" id="lugar-ubiCorta"></div>
-                            <div class="form-group flex-1"><label>Ubicación Larga (Ej. Ahuachapán, El Salvador)</label><input type="text" id="lugar-ubiLarga"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group flex-1"><label>Elevación</label><input type="text" id="lugar-elevacion"></div>
-                            <div class="form-group flex-1"><label>Clima</label><input type="text" id="lugar-clima"></div>
-                            <div class="form-group flex-1"><label>Latitud</label><input type="number" step="any" id="lugar-lat"></div>
-                            <div class="form-group flex-1"><label>Longitud</label><input type="number" step="any" id="lugar-lng"></div>
-                        </div>
-
-                        <div class="form-section-divider">Rating y Temporada</div>
-                        <div class="form-row">
-                            <div class="form-group flex-1"><label>Calificación (Ej. 4.8)</label><input type="number" step="0.1" id="lugar-calificacion"></div>
-                            <div class="form-group flex-1"><label>Cant. Reseñas</label><input type="number" id="lugar-resenas"></div>
-                            <div class="form-group flex-1"><label>Mejor Temp. (Título)</label><input type="text" id="lugar-tempTit"></div>
-                            <div class="form-group flex-1"><label>Mejor Temp. (Desc)</label><input type="text" id="lugar-tempDesc"></div>
-                        </div>
-
-                        <div class="form-section-divider">Estadísticas del Directorio</div>
-                        <div class="form-row">
-                            <div class="form-group flex-1"><label>Título Tarjeta</label><input type="text" id="stat-titGral"></div>
-                            <div class="form-group flex-2"><label>Descripción Tarjeta</label><input type="text" id="stat-descGral"></div>
-                        </div>
-                        <div class="form-row" style="background: #f8fafc; padding: 15px; border-radius: 8px;">
-                            <div class="form-group flex-1"><label>Stat 1 (Icono | Texto)</label><input type="text" id="st1-ico" placeholder="LocalCafe"><input type="text" id="st1-txt" style="margin-top:5px;" placeholder="14 Cafés"></div>
-                            <div class="form-group flex-1"><label>Stat 2 (Icono | Texto)</label><input type="text" id="st2-ico" placeholder="Home"><input type="text" id="st2-txt" style="margin-top:5px;" placeholder="12 Hoteles"></div>
-                            <div class="form-group flex-1"><label>Stat 3 (Icono | Texto)</label><input type="text" id="st3-ico" placeholder="Restaurant"><input type="text" id="st3-txt" style="margin-top:5px;" placeholder="8 Restaurantes"></div>
-                            <div class="form-group flex-1"><label>Stat 4 (Icono | Texto)</label><input type="text" id="st4-ico" placeholder="Brush"><input type="text" id="st4-txt" style="margin-top:5px;" placeholder="4 Talleres"></div>
-                        </div>
-
-                        <div class="form-section-divider">Atractivos del Lugar</div>
-                        <div id="atractivos-container">
-                            <!-- Filas de atractivos generadas por JS -->
-                        </div>
-                        <button type="button" class="btn-secondary" style="margin-top: 10px;" onclick="agregarAtractivoFila()">+ Añadir Atractivo</button>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="cerrarFormLugar()" style="margin-right: 10px;">Cancelar</button>
-                            <button type="submit" class="btn-primary">💾 Guardar Registro</button>
-                        </div>
-                    </form>
-                </section>
-
-                <section class="form-card" id="panel-tabla-lugares">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Municipio</th>
-                                <th>Categoría</th>
-                                <th>Rating</th>
-                                <th>Clima</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-municipios-body">
-                            <!-- Se renderiza dinámicamente -->
-                        </tbody>
-                    </table>
-                </section>
-            </div>
-
-            <!-- VISTA 3: USUARIOS -->
-            <div id="vista-usuarios" class="vista-oculta">
-                <header class="page-header">
-                    <div>
-                        <h1>Usuarios Registrados</h1>
-                        <p>Administra los permisos de acceso a la aplicación.</p>
                     </div>
-                </header>
-                <section class="form-card">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Usuario</th>
-                                <th>Correo</th>
-                                <th>Rol Actual</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-usuarios-body">
-                            <!-- Renderizado dinámicamente -->
-                        </tbody>
-                    </table>
-                </section>
+                </div>
             </div>
-        </main>
-    </div>
-    <script th:src="@{/js/admin.js}"></script>
+
+        </div>
+
+        <!-- VISTA 2: GESTIONAR MUNICIPIOS -->
+        <div id="vista-municipios" class="vista-oculta">
+            <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Directorio de Municipios</h1>
+                    <p>Visualiza y administra todos los datos de los pueblos.</p>
+                </div>
+                <button class="btn-primary" onclick="abrirFormLugar()">Registrar Pueblo</button>
+            </header>
+
+            <section class="form-card vista-oculta" id="panel-form-lugar" style="margin-bottom: 30px;">
+                <h2 id="lugar-form-title" style="margin-bottom: 20px; font-size: 18px;">Detalles del Municipio</h2>
+                <form id="formLugar">
+                    <input type="hidden" id="lugar-id">
+
+                    <div class="form-section-divider">Información Principal</div>
+                    <div class="form-row">
+                        <div class="form-group flex-1"><label>Nombre</label><input type="text" id="lugar-nombre" required></div>
+                        <div class="form-group flex-1"><label>Subtítulo</label><input type="text" id="lugar-subtitulo"></div>
+                        <div class="form-group flex-1"><label>Categoría</label>
+                            <select id="lugar-categoria" required>
+                                <option value="TODOS">TODOS</option>
+                                <option value="PUEBLO">PUEBLO</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>URL de Imagen de Portada</label>
+                        <input type="url" id="lugar-imagen" placeholder="Ej. https://firebasestorage.googleapis.com/.../foto.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label>Historia & Esencia</label>
+                        <textarea id="lugar-historia" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-section-divider">Ubicación y Entorno</div>
+                    <div class="form-row">
+                        <div class="form-group flex-1"><label>Ubicación Corta (Ej. Ahuachapán)</label><input type="text" id="lugar-ubiCorta"></div>
+                        <div class="form-group flex-1"><label>Ubicación Larga (Ej. Ahuachapán, El Salvador)</label><input type="text" id="lugar-ubiLarga"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group flex-1"><label>Elevación</label><input type="text" id="lugar-elevacion"></div>
+                        <div class="form-group flex-1"><label>Clima</label><input type="text" id="lugar-clima"></div>
+                        <div class="form-group flex-1"><label>Latitud</label><input type="number" step="any" id="lugar-lat"></div>
+                        <div class="form-group flex-1"><label>Longitud</label><input type="number" step="any" id="lugar-lng"></div>
+                    </div>
+
+                    <div class="form-section-divider">Rating y Temporada</div>
+                    <div class="form-row">
+                        <div class="form-group flex-1"><label>Calificación (Ej. 4.8)</label><input type="number" step="0.1" id="lugar-calificacion"></div>
+                        <div class="form-group flex-1"><label>Cant. Reseñas</label><input type="number" id="lugar-resenas"></div>
+                        <div class="form-group flex-1"><label>Mejor Temp. (Título)</label><input type="text" id="lugar-tempTit"></div>
+                        <div class="form-group flex-1"><label>Mejor Temp. (Desc)</label><input type="text" id="lugar-tempDesc"></div>
+                    </div>
+
+                    <div class="form-section-divider">Estadísticas del Directorio</div>
+                    <div class="form-row">
+                        <div class="form-group flex-1"><label>Título Tarjeta</label><input type="text" id="stat-titGral"></div>
+                        <div class="form-group flex-2"><label>Descripción Tarjeta</label><input type="text" id="stat-descGral"></div>
+                    </div>
+                    <div class="form-row" style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                        <div class="form-group flex-1"><label>Stat 1 (Icono | Texto)</label><input type="text" id="st1-ico" placeholder="LocalCafe"><input type="text" id="st1-txt" style="margin-top:5px;" placeholder="14 Cafés"></div>
+                        <div class="form-group flex-1"><label>Stat 2 (Icono | Texto)</label><input type="text" id="st2-ico" placeholder="Home"><input type="text" id="st2-txt" style="margin-top:5px;" placeholder="12 Hoteles"></div>
+                        <div class="form-group flex-1"><label>Stat 3 (Icono | Texto)</label><input type="text" id="st3-ico" placeholder="Restaurant"><input type="text" id="st3-txt" style="margin-top:5px;" placeholder="8 Restaurantes"></div>
+                        <div class="form-group flex-1"><label>Stat 4 (Icono | Texto)</label><input type="text" id="st4-ico" placeholder="Brush"><input type="text" id="st4-txt" style="margin-top:5px;" placeholder="4 Talleres"></div>
+                    </div>
+
+                    <div class="form-section-divider">Atractivos del Lugar</div>
+                    <div id="atractivos-container">
+                        <!-- Filas de atractivos generadas por JS -->
+                    </div>
+                    <button type="button" class="btn-secondary" style="margin-top: 10px;" onclick="agregarAtractivoFila()">+ Añadir Atractivo</button>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="cerrarFormLugar()" style="margin-right: 10px;">Cancelar</button>
+                        <button type="submit" class="btn-primary">Guardar Registro</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="form-card" id="panel-tabla-lugares">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Municipio</th>
+                        <th>Categoría</th>
+                        <th>Rating</th>
+                        <th>Clima</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabla-municipios-body">
+                    <!-- Se renderiza dinámicamente -->
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- VISTA 3: USUARIOS -->
+        <div id="vista-usuarios" class="vista-oculta">
+            <header class="page-header">
+                <div>
+                    <h1>Usuarios Registrados</h1>
+                    <p>Administra los permisos de acceso a la aplicación.</p>
+                </div>
+            </header>
+            <section class="form-card">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>Rol Actual</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabla-usuarios-body">
+                    <!-- Renderizado dinámicamente -->
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- VISTA 4: NEGOCIOS REGISTRADOS (PANTALLA DEDICADA) -->
+        <div id="vista-registrados" class="vista-oculta">
+            <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Negocios Registrados</h1>
+                    <p>Directorio general de comercios y locales inscritos en la plataforma.</p>
+                </div>
+                <button class="btn-primary" onclick="cambiarVista('negocios')">
+                        <span class="nav-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </span> Registrar Nuevo Negocio
+                </button>
+            </header>
+            <section class="form-card" style="margin-top: 20px; max-width: 100%;">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabla-comercios-body">
+                    <!-- Renderizado dinámico -->
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/admin.js}"></script>
+<script>
+    // Controlador de cambio de vistas con soporte para la pantalla de Negocios Registrados
+    const funcionOriginalCambiarVista = window.cambiarVista;
+    window.cambiarVista = function(vista) {
+        document.querySelectorAll('[id^="vista-"]').forEach(el => {
+            el.classList.remove('vista-activa', 'fade-in');
+            el.classList.add('vista-oculta');
+        });
+        document.querySelectorAll('.sidebar nav a').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        const vistaObjetivo = document.getElementById('vista-' + vista);
+        if (vistaObjetivo) {
+            vistaObjetivo.classList.remove('vista-oculta');
+            vistaObjetivo.classList.add('vista-activa', 'fade-in');
+        }
+
+        const navObjetivo = document.getElementById('nav-' + vista);
+        if (navObjetivo) {
+            navObjetivo.classList.add('active');
+        }
+
+        if (typeof funcionOriginalCambiarVista === 'function') {
+            try {
+                funcionOriginalCambiarVista(vista);
+            } catch (e) {
+                // Silenciar si admin.js no reconoce la nueva vista de forma nativa
+            }
+        }
+    };
+
+</script>
 </body>
 </html>

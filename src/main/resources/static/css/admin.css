@@ -308,3 +308,176 @@ input:focus, select:focus, textarea:focus {
 }
 .badge-admin { background-color: #dcfce7; color: #166534; }
 .badge-user { background-color: #f1f5f9; color: #475569; }
+
+/*vista previa*/
+/* Contenedor del Mockup Móvil */
+.mobile-card-preview {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    max-width: 360px;
+    margin: 0 auto;
+    font-family: inherit;
+}
+
+.preview-img-box {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    background: #0f172a;
+}
+
+.preview-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 20px;
+    text-transform: capitalize;
+    font-weight: 500;
+}
+
+.preview-body {
+    padding: 16px;
+}
+
+.preview-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.preview-header-row h3 {
+    margin: 0;
+    font-size: 17px;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.preview-rating {
+    font-size: 12px;
+    font-weight: 600;
+    background: #fef3c7;
+    color: #b45309;
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.preview-municipio {
+    margin: 4px 0 10px 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.preview-desc {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.preview-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.preview-chips .chip {
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.preview-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+}
+
+.btn-preview-demo {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: default;
+}
+/* Zona Drag & Drop */
+.dropzone-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dropzone-box:hover, .dropzone-box.dragover {
+    border-color: #4f46e5;
+    background: #eef2ff;
+}
+
+/* Grilla de Miniaturas */
+.miniaturas-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.miniatura-item {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.miniatura-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.miniatura-eliminar {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

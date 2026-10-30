@@ -72,8 +72,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // API administrativa
-                        .requestMatchers("/api/admin/**")
-                        .hasRole("ADMIN")
+                        .requestMatchers("/api/archivos/**").hasAnyRole("ADMIN", "CLIENTE")
 
                         // API para clientes
                         .requestMatchers("/api/cliente/**")
