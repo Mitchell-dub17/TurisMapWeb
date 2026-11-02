@@ -1,7 +1,7 @@
 // ==========================================
 // 1. SESIÓN Y NAVEGACIÓN
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
     const rol = localStorage.getItem('userTipo');
 
@@ -12,11 +12,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inicializarDropzone();
     inicializarSoporteUrlDirectaAdmin();
-    cargarComercios();
-    cargarMunicipios();
+    inicializarEscuchadoresVistaPrevia();
+
+    await cargarComercios();
+    await cargarMunicipios();
+    await cargarSolicitudesBasico();
+
+    actualizarVistaPreviaEnVivo();
+
+    const btnRef = document.getElementById('btn-refrescar-solicitudes');
+    if (btnRef) {
+        btnRef.addEventListener('click', () => {
+            cargarSolicitudesBasico();
+        });
+    }
+
+    const inputBuscar = document.getElementById('input-buscar-solicitud');
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', aplicarFiltrosYRenderizar);
+    }
 });
 
-function cambiarVista(vista) {
+async function cambiarVista(vista) {
     const nuevaVista = document.getElementById('vista-' + vista);
 
     if (!nuevaVista) {
@@ -42,11 +59,13 @@ function cambiarVista(vista) {
     }
 
     if (vista === 'municipios') {
-        cargarMunicipios();
+        await cargarMunicipios();
     } else if (vista === 'usuarios') {
-        cargarUsuarios();
+        await cargarUsuarios();
     } else if (vista === 'negocios' || vista === 'registrados') {
-        cargarComercios();
+        await cargarComercios();
+    } else if (vista === 'solicitudes') {
+        await cargarSolicitudesBasico();
     }
 }
 
@@ -147,7 +166,6 @@ function inicializarSoporteUrlDirectaAdmin() {
             return;
         }
 
-        // Se incorpora directamente a las imágenes del comercio
         imagenesExistentes.push(url);
         renderizarMiniaturas();
         sincronizarMockupConPrimeraFoto();
@@ -179,7 +197,6 @@ function renderizarMiniaturas() {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
-    // Fotos existentes o URLs agregadas directamente
     imagenesExistentes.forEach((url, idx) => {
         const div = document.createElement('div');
         div.className = 'miniatura-item';
@@ -190,7 +207,6 @@ function renderizarMiniaturas() {
         contenedor.appendChild(div);
     });
 
-    // Fotos locales cargadas desde el explorador
     archivosParaSubir.forEach((file, idx) => {
         const previewUrl = URL.createObjectURL(file);
         const div = document.createElement('div');
@@ -218,7 +234,83 @@ function sincronizarMockupConPrimeraFoto() {
 
 
 // ==========================================
-// 3. COMERCIOS (AGREGAR / EDITAR / ELIMINAR)
+// 3. REACTIVIDAD EN VIVO DEL MOCKUP
+// ==========================================
+function actualizarVistaPreviaEnVivo() {
+    const inputNombre = document.getElementById('nombre');
+    const selectTipo = document.getElementById('tipo');
+    const selectMuni = document.getElementById('municipio');
+    const inputDesc = document.getElementById('descripcion');
+    const inputLlamativo = document.getElementById('llamativo');
+    const inputPrecio = document.getElementById('precioDesde');
+
+    // 1. Nombre
+    const prevNombre = document.getElementById('prev-nombre');
+    if (prevNombre && inputNombre) {
+        prevNombre.textContent = inputNombre.value.trim() || 'Nombre del Establecimiento';
+    }
+
+    // 2. Categoría (Badge)
+    const prevCategoria = document.getElementById('prev-categoria');
+    if (prevCategoria && selectTipo) {
+        const textoCat = selectTipo.options[selectTipo.selectedIndex]?.text;
+        prevCategoria.textContent = (selectTipo.value && textoCat !== 'Selecciona una...')
+            ? textoCat
+            : 'Categoría';
+    }
+
+    // 3. Municipio
+    const prevMuni = document.getElementById('prev-municipio');
+    if (prevMuni && selectMuni) {
+        const textoMuni = selectMuni.options[selectMuni.selectedIndex]?.text;
+        prevMuni.textContent = (selectMuni.value && textoMuni !== 'Selecciona ubicación...')
+            ? textoMuni
+            : 'Municipio seleccionado';
+    }
+
+    // 4. Descripción
+    const prevDesc = document.getElementById('prev-descripcion');
+    if (prevDesc && inputDesc) {
+        prevDesc.textContent = inputDesc.value.trim() || 'Aquí se mostrará la descripción del negocio tal como la leerá el turista...';
+    }
+
+    // 5. Servicios / Etiquetas
+    const prevLlamativo = document.getElementById('prev-llamativo');
+    if (prevLlamativo && inputLlamativo) {
+        const tags = inputLlamativo.value.split(',').map(s => s.trim()).filter(Boolean);
+        if (tags.length > 0) {
+            prevLlamativo.innerHTML = tags
+                .map(t => `<span class="preview-tag-pill" style="background: rgba(99, 102, 241, 0.1); color: #4F46E5; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">${t}</span>`)
+                .join(' ');
+        } else {
+            prevLlamativo.innerHTML = `<span class="preview-tag-pill" style="background: rgba(99, 102, 241, 0.1); color: #4F46E5; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">Vista panorámica</span>`;
+        }
+    }
+
+    // 6. Precio sugerido
+    const prevPrecio = document.getElementById('prev-precio');
+    if (prevPrecio && inputPrecio) {
+        const valor = parseFloat(inputPrecio.value);
+        prevPrecio.textContent = (!isNaN(valor) && valor > 0)
+            ? `Desde $${valor.toFixed(2)}`
+            : 'Desde $0.00';
+    }
+}
+
+function inicializarEscuchadoresVistaPrevia() {
+    const campos = ['nombre', 'tipo', 'municipio', 'descripcion', 'llamativo', 'precioDesde'];
+    campos.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+            elem.addEventListener('input', actualizarVistaPreviaEnVivo);
+            elem.addEventListener('change', actualizarVistaPreviaEnVivo);
+        }
+    });
+}
+
+
+// ==========================================
+// 4. COMERCIOS (AGREGAR / EDITAR / ELIMINAR)
 // ==========================================
 let comerciosCache = [];
 
@@ -261,6 +353,7 @@ window.cancelarEdicionComercio = function() {
     imagenesExistentes = [];
     renderizarMiniaturas();
     sincronizarMockupConPrimeraFoto();
+    actualizarVistaPreviaEnVivo();
     document.getElementById('btn-cancelar-comercio').style.display = 'none';
     document.getElementById('btn-submit-comercio').textContent = 'Guardar en Firebase';
 };
@@ -284,11 +377,11 @@ window.editarComercio = function(id) {
     document.getElementById('llamativo').value = (com.servicios || []).join(', ');
     document.getElementById('propietarioUid').value = com.propietarioUid || '';
 
-    // Cargar fotos guardadas
     imagenesExistentes = Array.isArray(com.imagenUrls) ? [...com.imagenUrls] : [];
     archivosParaSubir = [];
     renderizarMiniaturas();
     sincronizarMockupConPrimeraFoto();
+    actualizarVistaPreviaEnVivo();
 
     document.getElementById('btn-cancelar-comercio').style.display = 'inline-block';
     document.getElementById('btn-submit-comercio').textContent = 'Guardar Cambios';
@@ -307,7 +400,6 @@ document.getElementById('formAgregarNegocio')?.addEventListener('submit', async 
     try {
         let todasLasUrls = [...imagenesExistentes];
 
-        // 1. Subir archivos binarios solo si hay fotos pendientes en la cola
         if (archivosParaSubir.length > 0) {
             const formData = new FormData();
             archivosParaSubir.forEach(archivo => {
@@ -323,7 +415,6 @@ document.getElementById('formAgregarNegocio')?.addEventListener('submit', async 
             todasLasUrls = [...todasLasUrls, ...nuevasUrls];
         }
 
-        // 2. Construir el payload del comercio
         let comercio = {};
         if (id) {
             const original = comerciosCache.find(c => c.id === id);
@@ -350,7 +441,6 @@ document.getElementById('formAgregarNegocio')?.addEventListener('submit', async 
         comercio.propietarioUid = document.getElementById('propietarioUid').value;
         comercio.imagenUrls = todasLasUrls;
 
-        // 3. Guardar directamente en Firestore
         const url = id ? `/api/comercios/${id}` : '/api/comercios';
         const method = id ? 'PUT' : 'POST';
 
@@ -364,7 +454,7 @@ document.getElementById('formAgregarNegocio')?.addEventListener('submit', async 
         await cargarComercios();
 
         if (id) {
-            cambiarVista('registrados');
+            await cambiarVista('registrados');
         }
     } catch (error) {
         console.error('Error al procesar el negocio:', error);
@@ -379,7 +469,7 @@ window.eliminarComercio = async function(id) {
     if (!confirm('¿Deseas eliminar este comercio?')) return;
     try {
         await fetchAutenticado(`/api/comercios/${id}`, { method: 'DELETE' });
-        cargarComercios();
+        await cargarComercios();
     } catch (e) {
         alert('Error al eliminar comercio');
     }
@@ -389,7 +479,7 @@ window.publicarComercio = async function(id) {
     if (!confirm('¿Publicar este comercio para la aplicación móvil?')) return;
     try {
         await fetchAutenticado(`/api/comercios/${id}/publicar`, { method: 'PUT' });
-        cargarComercios();
+        await cargarComercios();
     } catch (e) {
         alert('Error al publicar comercio');
     }
@@ -397,7 +487,7 @@ window.publicarComercio = async function(id) {
 
 
 // ==========================================
-// 4. MUNICIPIOS Y ATRACTIVOS
+// 5. MUNICIPIOS Y ATRACTIVOS
 // ==========================================
 let lugaresCache = [];
 
@@ -516,7 +606,7 @@ window.eliminarLugar = async function(id) {
     if (!confirm('¿Deseas eliminar este municipio?')) return;
     try {
         await fetchAutenticado(`/api/lugares/${id}`, { method: 'DELETE' });
-        cargarMunicipios();
+        await cargarMunicipios();
     } catch (e) {
         alert('Error al eliminar el municipio.');
     }
@@ -632,7 +722,7 @@ document.getElementById('formLugar')?.addEventListener('submit', async function(
 
         alert('Municipio guardado correctamente.');
         cerrarFormLugar();
-        cargarMunicipios();
+        await cargarMunicipios();
     } catch (error) {
         console.error('Error al guardar:', error);
         alert('Hubo un error al guardar los datos.');
@@ -644,7 +734,7 @@ document.getElementById('formLugar')?.addEventListener('submit', async function(
 
 
 // ==========================================
-// 5. GESTIÓN DE USUARIOS
+// 6. GESTIÓN DE USUARIOS
 // ==========================================
 let usuariosCache = [];
 
@@ -687,7 +777,7 @@ function renderUsuarios() {
 
 window.cambiarRolUsuario = async function(id, nuevoRol) {
     if (!confirm(`¿Deseas cambiar el rol a ${nuevoRol}?`)) {
-        cargarUsuarios();
+        await cargarUsuarios();
         return;
     }
     try {
@@ -696,11 +786,11 @@ window.cambiarRolUsuario = async function(id, nuevoRol) {
             body: JSON.stringify({ nuevoRol: nuevoRol })
         });
         alert('Rol modificado exitosamente.');
-        cargarUsuarios();
+        await cargarUsuarios();
     } catch (error) {
         console.error('Error al cambiar rol:', error);
         alert('Error al modificar el rol del usuario.');
-        cargarUsuarios();
+        await cargarUsuarios();
     }
 };
 
@@ -709,9 +799,198 @@ window.eliminarUsuarioPlataforma = async function(id) {
     try {
         await fetchAutenticado(`/api/usuarios/${id}`, { method: 'DELETE' });
         alert('Usuario eliminado correctamente.');
-        cargarUsuarios();
+        await cargarUsuarios();
     } catch (error) {
         console.error('Error al eliminar usuario:', error);
         alert('Error al eliminar el usuario.');
     }
 };
+
+
+// ==========================================
+// 7. SOLICITUDES DE PLAN BÁSICO (PRO)
+// ==========================================
+let solicitudesCache = [];
+let estadoFiltroActivo = 'TODAS';
+
+async function cargarSolicitudesBasico() {
+    const tbody = document.getElementById('tbody-solicitudes');
+    if (!tbody) return;
+
+    try {
+        const res = await fetchAutenticado('/api/solicitudes/admin/todas');
+        solicitudesCache = await res.json();
+        actualizarKpis();
+        aplicarFiltrosYRenderizar();
+    } catch (err) {
+        console.error("Error al cargar solicitudes:", err);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#FF5A78;">Error al consultar las solicitudes.</td></tr>';
+    }
+}
+
+function actualizarKpis() {
+    const total = solicitudesCache.length;
+    const pendientes = solicitudesCache.filter(s => (s.estado || 'PENDIENTE') === 'PENDIENTE').length;
+    const aprobadas = solicitudesCache.filter(s => s.estado === 'APROBADO').length;
+    const rechazadas = solicitudesCache.filter(s => s.estado === 'RECHAZADO').length;
+
+    const elTotal = document.getElementById('kpi-total');
+    const elPend = document.getElementById('kpi-pendientes');
+    const elAprob = document.getElementById('kpi-aprobadas');
+    const elRech = document.getElementById('kpi-rechazadas');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elPend) elPend.textContent = pendientes;
+    if (elAprob) elAprob.textContent = aprobadas;
+    if (elRech) elRech.textContent = rechazadas;
+}
+
+function aplicarFiltrosYRenderizar() {
+    const query = (document.getElementById('input-buscar-solicitud')?.value || '').toLowerCase().trim();
+
+    let filtradas = solicitudesCache.filter(s => {
+        const cumpleEstado = estadoFiltroActivo === 'TODAS' || (s.estado || 'PENDIENTE') === estadoFiltroActivo;
+        const cumpleQuery = !query ||
+            (s.nombreNegocio && s.nombreNegocio.toLowerCase().includes(query)) ||
+            (s.nombreCompleto && s.nombreCompleto.toLowerCase().includes(query)) ||
+            (s.municipio && s.municipio.toLowerCase().includes(query)) ||
+            (s.telefono && s.telefono.includes(query));
+
+        return cumpleEstado && cumpleQuery;
+    });
+
+    renderizarTablaSolicitudes(filtradas);
+}
+
+function renderizarTablaSolicitudes(lista) {
+    const tbody = document.getElementById('tbody-solicitudes');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!lista || lista.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #94A3B8;">
+                    No se encontraron solicitudes con los filtros aplicados.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    lista.forEach(s => {
+        const tr = document.createElement('tr');
+        const estado = s.estado || 'PENDIENTE';
+
+        let statusClass = 'status-pending';
+        if (estado === 'APROBADO') statusClass = 'status-approved';
+        if (estado === 'RECHAZADO') statusClass = 'status-rejected';
+
+        const inicial = (s.nombreNegocio || 'N').charAt(0).toUpperCase();
+        const telefonoLimpio = (s.telefono || '').replace(/\D/g, '');
+
+        tr.innerHTML = `
+            <td>
+                <div class="biz-cell">
+                    <div class="biz-avatar">${inicial}</div>
+                    <div class="biz-info">
+                        <strong>${s.nombreNegocio || 'Sin Nombre'}</strong>
+                        <span class="biz-tag">${s.categoria || 'Comercio'}</span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div class="contact-cell">
+                    <strong>${s.nombreCompleto || 'Propietario'}</strong>
+                    <a href="https://wa.me/503${telefonoLimpio}" target="_blank" class="btn-whatsapp-pill" title="Escribir por WhatsApp">
+                        💬 +503 ${s.telefono || ''}
+                    </a>
+                </div>
+            </td>
+            <td>
+                <strong style="color:#0F172A; font-size:13px;">${s.municipio || 'Ruta de las Flores'}</strong><br>
+                <small style="color:#64748B;">${s.direccion || 'Sin dirección'}</small>
+            </td>
+            <td>
+                <span style="color:#64748B; font-size:12px;">${s.fechaRegistro || 'Reciente'}</span>
+            </td>
+            <td>
+                <span class="status-pill ${statusClass}">
+                    <span class="status-dot"></span>
+                    ${estado}
+                </span>
+            </td>
+            <td>
+                <div class="actions-cell">
+                    <button class="btn-action-icon btn-ver-pro" onclick="abrirDetalleSolicitud('${s.id}')" title="Ver detalles completos">
+                        👁️
+                    </button>
+                    ${estado !== 'APROBADO' ? `
+                    <button class="btn-action-icon btn-validar-pro" onclick="cambiarEstadoSolicitud('${s.id}', 'APROBADO')" title="Aprobar establecimiento">
+                        ✓ Validar
+                    </button>` : ''}
+                    ${estado !== 'RECHAZADO' ? `
+                    <button class="btn-action-icon btn-rechazar-pro" onclick="cambiarEstadoSolicitud('${s.id}', 'RECHAZADO')" title="Descartar solicitud">
+                        ✕
+                    </button>` : ''}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.filtrarPorEstado = function(nuevoEstado) {
+    estadoFiltroActivo = nuevoEstado;
+    document.querySelectorAll('.filter-pills .pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-estado') === nuevoEstado);
+    });
+    aplicarFiltrosYRenderizar();
+};
+
+window.abrirDetalleSolicitud = function(id) {
+    const s = solicitudesCache.find(item => item.id === id);
+    if (!s) return;
+
+    document.getElementById('modal-det-negocio').textContent = s.nombreNegocio || 'Sin Nombre';
+    document.getElementById('modal-det-sub').textContent = `${s.municipio || 'Ruta de las Flores'} · ${s.categoria || 'Comercio'}`;
+    document.getElementById('modal-det-encargado').textContent = s.nombreCompleto || '-';
+    document.getElementById('modal-det-email').textContent = s.email || 'No especificado';
+    document.getElementById('modal-det-fecha').textContent = s.fechaRegistro || 'Reciente';
+    document.getElementById('modal-det-direccion').textContent = s.direccion || 'Sin dirección física';
+    document.getElementById('modal-det-descripcion').textContent = s.descripcion || 'Sin descripción adicional.';
+
+    const telLimpio = (s.telefono || '').replace(/\D/g, '');
+    document.getElementById('modal-det-whatsapp-wrapper').innerHTML = `
+        <a href="https://wa.me/503${telLimpio}" target="_blank" class="btn-whatsapp-pill" style="font-size:13px; padding:6px 14px;">
+            💬 Chatear con +503 ${s.telefono}
+        </a>`;
+
+    const contenedorAcciones = document.getElementById('modal-det-acciones');
+    contenedorAcciones.innerHTML = `
+        <button type="button" class="btn-secondary" onclick="cerrarDetalleSolicitud()">Cerrar</button>
+        <button type="button" class="btn-danger" onclick="cambiarEstadoSolicitud('${s.id}', 'RECHAZADO'); cerrarDetalleSolicitud();">Rechazar</button>
+        <button type="button" class="btn-primary" style="background:#00D166; color:#000;" onclick="cambiarEstadoSolicitud('${s.id}', 'APROBADO'); cerrarDetalleSolicitud();">✓ Validar y Aprobar</button>
+    `;
+
+    document.getElementById('modal-detalle-solicitud').classList.add('active');
+};
+
+window.cerrarDetalleSolicitud = function() {
+    document.getElementById('modal-detalle-solicitud').classList.remove('active');
+};
+
+window.cambiarEstadoSolicitud = async function(id, nuevoEstado) {
+    if (!confirm(`¿Estás seguro de marcar esta solicitud como ${nuevoEstado}?`)) return;
+
+    try {
+        await fetchAutenticado(`/api/solicitudes/admin/${id}/estado?estado=${nuevoEstado}`, {
+            method: 'PATCH'
+        });
+        await cargarSolicitudesBasico();
+    } catch (e) {
+        alert('No se pudo actualizar el estado de la solicitud.');
+    }
+};
+
+window.cargarSolicitudesBasico = cargarSolicitudesBasico;
+window.aplicarFiltrosYRenderizar = aplicarFiltrosYRenderizar;

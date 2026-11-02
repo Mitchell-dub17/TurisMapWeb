@@ -1,35 +1,78 @@
 package com.turismap.admin.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioFirestore {
-    private String id;
 
-    @Email(message = "El correo debe ser válido")
-    @NotBlank(message = "El correo es obligatorio")
-    private String email;
-    
-    @NotBlank(message = "El rol es obligatorio")
-    private String rol; // admin, cliente
-    
+    private String id;
     private String nombre;
-    private List<String> intereses;
-    private String fotoPerfil;
-    private String fotoPortada;
-    
-    private List<String> favoritos; // IDs de lugares
-    
-    private Map<String, Object> preferencias;
+    private String email;
+    private String password;
+    private String telefono;
+    private String rol;   // "ADMIN", "CLIENTE", "VIAJERO"
+    private String plan;  // "NINGUNO", "BASICO", "SOCIO", "PREMIUM"
+
+    // Getters y Setters explícitos para compatibilidad total con Firebase y Spring
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
+    }
+
+    public String getPlan() {
+        return plan;
+    }
+
+    public void setPlan(String plan) {
+        this.plan = plan;
+    }
 }

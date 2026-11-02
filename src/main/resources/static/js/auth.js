@@ -1,12 +1,12 @@
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
     getAuth,
     signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+console.log("🟢 [TurisMap] auth.js cargado correctamente");
 
 // Configuración web de Firebase
 const firebaseConfig = {
@@ -22,22 +22,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// Elementos del DOM
 const loginForm = document.getElementById("loginForm");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const errorMsg = document.getElementById("errorMsg");
 
-if (loginForm && emailInput && passwordInput && errorMsg) {
+const registerForm = document.getElementById("registerForm");
+const regNombre = document.getElementById("regNombre");
+const regEmail = document.getElementById("regEmail");
+const regTelefono = document.getElementById("regTelefono");
+const regPassword = document.getElementById("regPassword");
+const regPasswordConfirm = document.getElementById("regPasswordConfirm");
+const regPlanInput = document.getElementById("register-plan-input");
 
+// ==========================================================
+// 1. CONTROLADOR DE LOGIN
+// ==========================================================
+if (loginForm) {
     loginForm.addEventListener("submit", async function (event) {
         event.preventDefault();
+        console.log("🔵 [TurisMap] Formulario de login enviado");
 
-        const submitBtn = loginForm.querySelector(
-            'button[type="submit"]'
-        );
-
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
+        const submitBtn = document.getElementById("btnLoginSubmit") || loginForm.querySelector('button[type="submit"]');
+        const email = emailInput ? emailInput.value.trim() : "";
+        const password = passwordInput ? passwordInput.value : "";
 
         if (!email || !password) {
             mostrarError("Introduce tu correo y contraseña.");
@@ -46,129 +55,87 @@ if (loginForm && emailInput && passwordInput && errorMsg) {
 
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = "Autenticando...";
+            submitBtn.textContent = "Verificando credenciales...";
         }
 
         ocultarError();
 
         try {
-            // Limpiar credenciales anteriores para evitar reutilizar
-            // un token de una sesión previa.
             localStorage.removeItem("token");
             localStorage.removeItem("userTipo");
             localStorage.removeItem("userName");
             localStorage.removeItem("userCorreo");
 
-            // 1. Autenticar al usuario con Firebase Authentication.
-            const userCredential = await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
+            console.log("🟡 [TurisMap] Autenticando con Firebase:", email);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-            // 2. Obtener el ID token de Firebase.
-            const firebaseIdToken =
-                await userCredential.user.getIdToken();
+            console.log("🟡 [TurisMap] Obteniendo token de Firebase...");
+            const firebaseIdToken = await userCredential.user.getIdToken();
 
-            // 3. Validar la identidad y obtener el JWT de TurisMap.
+            console.log("🟡 [TurisMap] Validando credenciales con Spring Boot (/api/auth/login)...");
             const response = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Accept": "application/json"
                 },
-                body: JSON.stringify({
-                    token: firebaseIdToken
-                })
+                body: JSON.stringify({ token: firebaseIdToken })
             });
 
-            // El backend puede devolver JSON o texto plano.
             const responseText = await response.text();
-
             let data = {};
 
             if (responseText) {
                 try {
                     data = JSON.parse(responseText);
                 } catch {
-                    data = {
-                        message: responseText
-                    };
+                    data = { message: responseText };
                 }
             }
 
             if (!response.ok) {
-                const message =
-                    typeof data.message === "string"
-                        ? data.message
-                        : typeof data === "string"
-                            ? data
-                            : `El servidor respondió con HTTP ${response.status}.`;
+                const message = typeof data.message === "string"
+                    ? data.message
+                    : typeof data === "string"
+                        ? data
+                        : `Error del servidor (código ${response.status}).`;
+
+                // REGLA 3: Si no tiene plan activo
+                if (response.status === 403 && message.includes("plan")) {
+                    mostrarError(message);
+                    setTimeout(() => {
+                        window.location.href = "/?error=requiere_plan#negocios";
+                    }, 2000);
+                    return;
+                }
 
                 throw new Error(message);
             }
 
-            // 4. Comprobar que la respuesta contiene los datos esperados.
-            if (
-                !data.token ||
-                typeof data.tipo !== "string" ||
-                typeof data.redirectUrl !== "string"
-            ) {
-                throw new Error(
-                    "El servidor devolvió una respuesta de autenticación incompleta."
-                );
+            if (!data.token || typeof data.tipo !== "string" || typeof data.redirectUrl !== "string") {
+                throw new Error("El servidor devolvió una respuesta incompleta.");
             }
 
             const rol = data.tipo.toLowerCase();
+            console.log("🟢 [TurisMap] Login exitoso. Rol detectado:", rol);
 
-            // Solo permitir los roles definidos para TurisMap.
-            if (rol !== "admin" && rol !== "cliente") {
-                throw new Error(
-                    "El servidor devolvió un rol no reconocido."
-                );
-            }
-
-            // Solo permitir redirecciones locales conocidas.
-            const rutasPermitidas = {
-                admin: "/admin",
-                cliente: "/portal-cliente"
-            };
-
-            const rutaEsperada = rutasPermitidas[rol];
-
-            if (data.redirectUrl !== rutaEsperada) {
-                throw new Error(
-                    "La ruta de redirección recibida no es válida."
-                );
-            }
-
-            // 5. Guardar el JWT emitido por Spring Boot.
-            // No guardar el ID token de Firebase como JWT del backend.
             localStorage.setItem("token", data.token);
             localStorage.setItem("userTipo", rol);
             localStorage.setItem("userName", data.nombre || "");
             localStorage.setItem("userCorreo", data.correo || "");
 
-            // 6. Navegar al portal correspondiente.
-            window.location.assign(rutaEsperada);
+            // Redirección inmediata a /admin o /portal-cliente
+            window.location.assign(data.redirectUrl);
 
         } catch (error) {
-            console.error("Error durante el inicio de sesión:", error);
+            console.error("🔴 [TurisMap] Error durante el login:", error);
 
-            // Eliminar cualquier credencial incompleta.
-            localStorage.removeItem("token");
-            localStorage.removeItem("userTipo");
-            localStorage.removeItem("userName");
-            localStorage.removeItem("userCorreo");
+            localStorage.clear();
 
-            // Cerrar la sesión de Firebase si se había iniciado.
             try {
                 await signOut(auth);
             } catch (signOutError) {
-                console.error(
-                    "No se pudo cerrar la sesión de Firebase:",
-                    signOutError
-                );
+                console.error("Error cerrando sesión en Firebase:", signOutError);
             }
 
             mostrarError(obtenerMensajeError(error));
@@ -176,25 +143,103 @@ if (loginForm && emailInput && passwordInput && errorMsg) {
         } finally {
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = "Ingresar al Sistema";
+                submitBtn.textContent = "Ingresar a TurisMap";
             }
         }
     });
-
-} else {
-    console.error(
-        "No se encontraron todos los elementos necesarios del formulario de login."
-    );
 }
 
+// ==========================================================
+// 2. CONTROLADOR DE REGISTRO
+// ==========================================================
+if (registerForm) {
+    registerForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const submitBtn = document.getElementById("btnRegisterSubmit") || registerForm.querySelector('button[type="submit"]');
+        const nombre = regNombre.value.trim();
+        const email = regEmail.value.trim();
+        const telefono = regTelefono.value.trim();
+        const password = regPassword.value;
+        const confirmPassword = regPasswordConfirm.value;
+        const plan = regPlanInput.value || "NINGUNO";
+
+        ocultarError();
+
+        if (password !== confirmPassword) {
+            mostrarError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        if (password.length < 6) {
+            mostrarError("La contraseña debe tener mínimo 6 caracteres.");
+            return;
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Registrando usuario...";
+        }
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+
+            const response = await fetch("/api/auth/registro", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    nombre: nombre,
+                    email: email,
+                    telefono: telefono,
+                    plan: plan,
+                    password: ""
+                })
+            });
+
+            if (!response.ok) {
+                const errorBackend = await response.text();
+                throw new Error(errorBackend || "No se pudo registrar en Firestore.");
+            }
+
+            alert("¡Cuenta creada exitosamente! Iniciando sesión...");
+
+            emailInput.value = email;
+            passwordInput.value = password;
+            cambiarPestaña('login');
+            loginForm.dispatchEvent(new Event('submit'));
+
+        } catch (error) {
+            console.error("🔴 [TurisMap] Error en registro:", error);
+            mostrarError(obtenerMensajeError(error));
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Crear Cuenta";
+            }
+        }
+    });
+}
+
+// ==========================================================
+// UTILIDADES DE INTERFAZ Y ERRORES
+// ==========================================================
 function mostrarError(mensaje) {
-    errorMsg.textContent = `❌ ${mensaje}`;
-    errorMsg.style.display = "block";
+    if (errorMsg) {
+        errorMsg.textContent = `❌ ${mensaje}`;
+        errorMsg.style.display = "block";
+    } else {
+        alert(mensaje);
+    }
 }
 
 function ocultarError() {
-    errorMsg.textContent = "";
-    errorMsg.style.display = "none";
+    if (errorMsg) {
+        errorMsg.textContent = "";
+        errorMsg.style.display = "none";
+    }
 }
 
 function obtenerMensajeError(error) {
@@ -205,21 +250,38 @@ function obtenerMensajeError(error) {
         case "auth/wrong-password":
         case "auth/user-not-found":
             return "Correo o contraseña incorrectos.";
-
+        case "auth/email-already-in-use":
+            return "Este correo ya está registrado en Firebase.";
         case "auth/invalid-email":
             return "El formato del correo electrónico no es válido.";
-
         case "auth/too-many-requests":
-            return "Se han realizado demasiados intentos. Inténtalo más tarde.";
-
+            return "Demasiados intentos fallidos. Inténtalo más tarde.";
         case "auth/network-request-failed":
-            return "No se pudo conectar con Firebase. Comprueba tu conexión.";
-
+            return "No se pudo conectar con Firebase. Comprueba tu conexión a Internet.";
         case "auth/user-disabled":
-            return "Esta cuenta de Firebase está deshabilitada.";
-
+            return "Esta cuenta de usuario ha sido inhabilitada.";
         default:
-            return error?.message ||
-                "No se pudo iniciar sesión. Inténtalo nuevamente.";
+            return error?.message || "No se pudo completar la operación. Inténtalo nuevamente.";
     }
 }
+
+window.cambiarPestaña = function(pestaña) {
+    const fLogin = document.getElementById('loginForm');
+    const fRegister = document.getElementById('registerForm');
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+
+    ocultarError();
+
+    if (pestaña === 'register') {
+        fLogin.style.display = "none";
+        fRegister.style.display = "flex";
+        tabLogin.classList.remove('active');
+        tabRegister.classList.add('active');
+    } else {
+        fRegister.style.display = "none";
+        fLogin.style.display = "flex";
+        tabRegister.classList.remove('active');
+        tabLogin.classList.add('active');
+    }
+};
