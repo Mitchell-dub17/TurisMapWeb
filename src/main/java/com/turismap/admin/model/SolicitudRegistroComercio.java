@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitudPlan {
+public class SolicitudRegistroComercio {
 
     private String id;
 
@@ -24,9 +24,13 @@ public class SolicitudPlan {
     private String categoria;
     private String direccion;
     private String descripcion;
+    private String horario;
+    private String sitioWeb;
 
     // Control de la Solicitud
-    private String plan;          // "BASICO"
+    private String planId;        // ID del plan: "presencia_basica", "socio_turismap", "socio_premium"
+    private String planNombre;    // Nombre del plan para referencia
+    private String propietarioUid;
     private String estado;        // "PENDIENTE", "APROBADO", "RECHAZADO"
-    private String fechaRegistro; // Ej: "31/10/2026, 03:30 PM"
+    private String fechaRegistro; // Fecha ISO-8601
 }

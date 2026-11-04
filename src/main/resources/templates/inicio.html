@@ -1008,7 +1008,7 @@
                 btnSubmit.innerHTML = '<span>Enviando información...</span>';
 
                 try {
-                    const res = await fetch('/api/solicitudes/basico', {
+                    const res = await fetch('/api/solicitudes/registrar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1019,7 +1019,9 @@
                             municipio: muni,
                             categoria: cat,
                             direccion: dir,
-                            descripcion: desc
+                            descripcion: desc,
+                            planId: 'presencia_basica',
+                            planNombre: 'Presencia Básica'
                         })
                     });
 

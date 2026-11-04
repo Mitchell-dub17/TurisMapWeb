@@ -1,6 +1,6 @@
 package com.turismap.admin.controller;
 
-import com.turismap.admin.model.SolicitudPlan;
+import com.turismap.admin.model.SolicitudRegistroComercio;
 import com.turismap.admin.service.SolicitudService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +21,16 @@ public class SolicitudController {
     private final SolicitudService solicitudService;
 
     // 1. ENDPOINT PÚBLICO: Envío del formulario desde la landing
-    @PostMapping("/basico")
-    public CompletableFuture<ResponseEntity<?>> registrarSolicitudBasico(@RequestBody SolicitudPlan solicitud) {
-        log.info("Recibida nueva solicitud de Plan Básico para: {}", solicitud.getNombreNegocio());
+    @PostMapping("/registrar")
+    public CompletableFuture<ResponseEntity<?>> registrarSolicitud(@RequestBody SolicitudRegistroComercio solicitud) {
+        log.info("Recibida nueva solicitud de registro para: {}, Plan: {}", solicitud.getNombreNegocio(), solicitud.getPlanNombre());
 
         if (solicitud.getNombreCompleto() == null || solicitud.getNombreCompleto().isBlank()
                 || solicitud.getTelefono() == null || solicitud.getTelefono().isBlank()
-                || solicitud.getNombreNegocio() == null || solicitud.getNombreNegocio().isBlank()) {
+                || solicitud.getNombreNegocio() == null || solicitud.getNombreNegocio().isBlank()
+                || solicitud.getPlanId() == null || solicitud.getPlanId().isBlank()) {
             return CompletableFuture.completedFuture(
-                    ResponseEntity.badRequest().body("Nombre, teléfono y nombre del negocio son obligatorios."));
+                    ResponseEntity.badRequest().body("Nombre, teléfono, nombre del negocio y plan son obligatorios."));
         }
 
         return solicitudService.guardarSolicitud(solicitud)

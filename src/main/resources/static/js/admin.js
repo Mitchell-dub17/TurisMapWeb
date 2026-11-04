@@ -16,14 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await cargarComercios();
     await cargarMunicipios();
-    await cargarSolicitudesBasico();
+    await cargarSolicitudes();
 
     actualizarVistaPreviaEnVivo();
 
     const btnRef = document.getElementById('btn-refrescar-solicitudes');
     if (btnRef) {
         btnRef.addEventListener('click', () => {
-            cargarSolicitudesBasico();
+            cargarSolicitudes();
         });
     }
 
@@ -65,7 +65,7 @@ async function cambiarVista(vista) {
     } else if (vista === 'negocios' || vista === 'registrados') {
         await cargarComercios();
     } else if (vista === 'solicitudes') {
-        await cargarSolicitudesBasico();
+        await cargarSolicitudes();
     }
 }
 
@@ -808,12 +808,12 @@ window.eliminarUsuarioPlataforma = async function(id) {
 
 
 // ==========================================
-// 7. SOLICITUDES DE PLAN BÁSICO (PRO)
+// 7. SOLICITUDES DE REGISTRO DE COMERCIOS
 // ==========================================
 let solicitudesCache = [];
 let estadoFiltroActivo = 'TODAS';
 
-async function cargarSolicitudesBasico() {
+async function cargarSolicitudes() {
     const tbody = document.getElementById('tbody-solicitudes');
     if (!tbody) return;
 
@@ -824,7 +824,7 @@ async function cargarSolicitudesBasico() {
         aplicarFiltrosYRenderizar();
     } catch (err) {
         console.error("Error al cargar solicitudes:", err);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#FF5A78;">Error al consultar las solicitudes.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#FF5A78;">Error al consultar las solicitudes.</td></tr>';
     }
 }
 
@@ -854,7 +854,9 @@ function aplicarFiltrosYRenderizar() {
             (s.nombreNegocio && s.nombreNegocio.toLowerCase().includes(query)) ||
             (s.nombreCompleto && s.nombreCompleto.toLowerCase().includes(query)) ||
             (s.municipio && s.municipio.toLowerCase().includes(query)) ||
-            (s.telefono && s.telefono.includes(query));
+            (s.telefono && s.telefono.includes(query)) ||
+            obtenerPlanNombre(s).toLowerCase().includes(query) ||
+            obtenerPlanId(s).toLowerCase().includes(query);
 
         return cumpleEstado && cumpleQuery;
     });
@@ -870,7 +872,7 @@ function renderizarTablaSolicitudes(lista) {
     if (!lista || lista.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 40px; color: #94A3B8;">
+                <td colspan="7" style="text-align: center; padding: 40px; color: #94A3B8;">
                     No se encontraron solicitudes con los filtros aplicados.
                 </td>
             </tr>`;
@@ -898,6 +900,7 @@ function renderizarTablaSolicitudes(lista) {
                     </div>
                 </div>
             </td>
+            <td></td>
             <td>
                 <div class="contact-cell">
                     <strong>${s.nombreCompleto || 'Propietario'}</strong>
@@ -910,9 +913,7 @@ function renderizarTablaSolicitudes(lista) {
                 <strong style="color:#0F172A; font-size:13px;">${s.municipio || 'Ruta de las Flores'}</strong><br>
                 <small style="color:#64748B;">${s.direccion || 'Sin dirección'}</small>
             </td>
-            <td>
-                <span style="color:#64748B; font-size:12px;">${s.fechaRegistro || 'Reciente'}</span>
-            </td>
+            <td><span class="solicitud-fecha" style="color:#64748B; font-size:12px;"></span></td>
             <td>
                 <span class="status-pill ${statusClass}">
                     <span class="status-dot"></span>
@@ -935,8 +936,36 @@ function renderizarTablaSolicitudes(lista) {
                 </div>
             </td>
         `;
+        const planCell = tr.children[1];
+        const planBadge = document.createElement('span');
+        planBadge.className = 'biz-tag';
+        planBadge.textContent = obtenerPlanNombre(s);
+        planCell.appendChild(planBadge);
+        tr.querySelector('.solicitud-fecha').textContent = formatearFechaSolicitud(s.fechaRegistro);
         tbody.appendChild(tr);
     });
+}
+
+function obtenerPlanId(solicitud) {
+    return solicitud.planId || solicitud.plan?.id || '';
+}
+
+function obtenerPlanNombre(solicitud) {
+    const planId = obtenerPlanId(solicitud);
+    const nombresConocidos = {
+        presencia_basica: 'Presencia Básica',
+        socio_turismap: 'Socio TurisMap',
+        socio_premium: 'Socio Premium'
+    };
+    return solicitud.planNombre || solicitud.plan?.nombre || nombresConocidos[planId] || planId || 'Sin plan';
+}
+
+function formatearFechaSolicitud(fecha) {
+    if (!fecha) return 'Reciente';
+    const fechaParseada = new Date(fecha);
+    return Number.isNaN(fechaParseada.getTime())
+        ? fecha
+        : fechaParseada.toLocaleString('es-SV', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 window.filtrarPorEstado = function(nuevoEstado) {
@@ -955,7 +984,20 @@ window.abrirDetalleSolicitud = function(id) {
     document.getElementById('modal-det-sub').textContent = `${s.municipio || 'Ruta de las Flores'} · ${s.categoria || 'Comercio'}`;
     document.getElementById('modal-det-encargado').textContent = s.nombreCompleto || '-';
     document.getElementById('modal-det-email').textContent = s.email || 'No especificado';
-    document.getElementById('modal-det-fecha').textContent = s.fechaRegistro || 'Reciente';
+    document.getElementById('modal-det-fecha').textContent = formatearFechaSolicitud(s.fechaRegistro);
+    document.getElementById('modal-det-plan').textContent = obtenerPlanNombre(s);
+    document.getElementById('modal-det-propietario-uid').textContent = s.propietarioUid || 'No especificado';
+    document.getElementById('modal-det-horario').textContent = s.horario || 'No especificado';
+    const sitioWeb = document.getElementById('modal-det-sitio-web');
+    const urlSitioWeb = (s.sitioWeb || '').trim();
+    if (/^https?:\/\//i.test(urlSitioWeb)) {
+        sitioWeb.href = urlSitioWeb;
+        sitioWeb.textContent = urlSitioWeb;
+        sitioWeb.hidden = false;
+    } else {
+        sitioWeb.removeAttribute('href');
+        sitioWeb.textContent = urlSitioWeb || 'No especificado';
+    }
     document.getElementById('modal-det-direccion').textContent = s.direccion || 'Sin dirección física';
     document.getElementById('modal-det-descripcion').textContent = s.descripcion || 'Sin descripción adicional.';
 
@@ -986,11 +1028,11 @@ window.cambiarEstadoSolicitud = async function(id, nuevoEstado) {
         await fetchAutenticado(`/api/solicitudes/admin/${id}/estado?estado=${nuevoEstado}`, {
             method: 'PATCH'
         });
-        await cargarSolicitudesBasico();
+        await cargarSolicitudes();
     } catch (e) {
         alert('No se pudo actualizar el estado de la solicitud.');
     }
 };
 
-window.cargarSolicitudesBasico = cargarSolicitudesBasico;
+window.cargarSolicitudes = cargarSolicitudes;
 window.aplicarFiltrosYRenderizar = aplicarFiltrosYRenderizar;
