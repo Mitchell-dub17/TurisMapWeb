@@ -51,7 +51,7 @@ public class SolicitudController {
 
     // El servidor toma la identidad del usuario de la sesión verificada, no del formulario.
     @PostMapping("/registrar")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE', 'VIAJERO')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     public CompletableFuture<ResponseEntity<?>> registrarSolicitud(
             @RequestBody SolicitudRegistroComercio solicitud,
             Authentication authentication,

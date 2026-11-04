@@ -82,8 +82,14 @@ public class AuthController {
                             ? usuario.getRol().trim().toUpperCase(Locale.ROOT)
                             : "VIAJERO";
 
+                    if (rol.equals("VIAJERO")) {
+                        log.info("Se rechazó el acceso web para la cuenta VIAJERO: {}", email);
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body("Las cuentas VIAJERO deben iniciar sesión desde la aplicación móvil. El acceso web está reservado para ADMIN y CLIENTE.");
+                    }
+
                     // ==============================================================
-                    // REGLA 2: Si el viajero adquirió plan Socio o Premium,
+                    // Si el usuario tiene plan Socio o Premium,
                     // se le habilita dinámicamente el acceso como CLIENTE.
                     // ==============================================================
                     if ((plan.contains("SOCIO") || plan.contains("PREMIUM")) && !rol.equals("ADMIN")) {

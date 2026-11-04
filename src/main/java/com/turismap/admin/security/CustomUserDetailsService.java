@@ -71,7 +71,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .trim()
                     .toUpperCase(Locale.ROOT);
 
-            if (!rol.equals("ADMIN") && !rol.equals("CLIENTE") && !rol.equals("VIAJERO")) {
+            if (!rol.equals("ADMIN") && !rol.equals("CLIENTE")) {
                 log.warn(
                         "Rol no reconocido para el usuario {}: {}",
                         usuario.getEmail(),

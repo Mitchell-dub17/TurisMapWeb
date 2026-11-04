@@ -204,7 +204,7 @@ if (registerForm) {
             regPassword.value = "";
             regPasswordConfirm.value = "";
             cambiarPestaña('login');
-            alert("Cuenta creada. Ahora inicia sesión con tu correo y contraseña para continuar con la solicitud.");
+            alert("Cuenta creada. Para solicitar el registro de tu comercio, inicia sesión desde la aplicación móvil TurisMap.");
 
         } catch (error) {
             console.error("🔴 [TurisMap] Error en registro:", error);

@@ -1,14 +1,28 @@
 package com.turismap.admin.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class WebController {
 
+    @Value("${turismap.app.deep-link-url}")
+    private String appDeepLinkUrl;
+
+    @Value("${turismap.app.android-download-url}")
+    private String androidDownloadUrl;
+
+    @Value("${turismap.app.ios-download-url}")
+    private String iosDownloadUrl;
+
     // Permite acceder a la landing tanto desde la raíz como desde /inicio
     @GetMapping({"/", "/inicio"})
-    public String inicio() {
+    public String inicio(Model model) {
+        model.addAttribute("appDeepLinkUrl", appDeepLinkUrl);
+        model.addAttribute("androidDownloadUrl", androidDownloadUrl);
+        model.addAttribute("iosDownloadUrl", iosDownloadUrl);
         return "inicio";
     }
 
