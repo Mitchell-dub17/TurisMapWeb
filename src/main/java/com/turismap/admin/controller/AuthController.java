@@ -37,8 +37,7 @@ public class AuthController {
 
         log.info("Procesando login con token de Firebase");
 
-        if (loginRequest.getToken() == null
-                || loginRequest.getToken().isBlank()) {
+        if (loginRequest.getToken() == null || loginRequest.getToken().isBlank()) {
             return CompletableFuture.completedFuture(
                     ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("El token de Firebase es obligatorio"));
@@ -49,11 +48,8 @@ public class AuthController {
         try {
             decodedToken = FirebaseAuth.getInstance()
                     .verifyIdToken(loginRequest.getToken());
-
         } catch (Exception e) {
-            log.warn("No se pudo validar el token de Firebase: {}",
-                    e.getMessage());
-
+            log.warn("No se pudo validar el token de Firebase: {}", e.getMessage());
             return CompletableFuture.completedFuture(
                     ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                             .body("Token de Firebase inválido o expirado"));
@@ -71,32 +67,37 @@ public class AuthController {
                 .<ResponseEntity<?>>thenApply(usuario -> {
 
                     if (usuario == null) {
-                        log.warn("Usuario autenticado en Firebase pero no registrado en TurisMap: {}",
-                                email);
-
+                        log.warn("Usuario autenticado en Firebase pero no registrado en TurisMap: {}", email);
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .body("El usuario no está registrado en TurisMap");
                     }
 
-                    if (usuario.getRol() == null
-                            || usuario.getRol().isBlank()) {
-                        log.error("El usuario no tiene un rol configurado: {}",
-                                email);
+                    String plan = (usuario.getPlan() != null)
+                            ? usuario.getPlan().trim().toUpperCase(Locale.ROOT)
+                            : "NINGUNO";
 
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body("El usuario no tiene un rol asignado");
+                    String rol = (usuario.getRol() != null && !usuario.getRol().isBlank())
+                            ? usuario.getRol().trim().toUpperCase(Locale.ROOT)
+                            : "VIAJERO";
+
+                    // ==============================================================
+                    // REGLA 2: Si el viajero adquirió plan Socio o Premium,
+                    // se le habilita dinámicamente el acceso como CLIENTE.
+                    // ==============================================================
+                    if ((plan.contains("SOCIO") || plan.contains("PREMIUM")) && !rol.equals("ADMIN")) {
+                        rol = "CLIENTE";
+                        log.info("Usuario {} promovido a CLIENTE por contar con plan {}", email, plan);
                     }
 
-                    String rol = usuario.getRol()
-                            .trim()
-                            .toUpperCase(Locale.ROOT);
-
+                    // ==============================================================
+                    // REGLAS 1 Y 3:
+                    // Si sigue siendo VIAJERO (sin plan o con plan BASICO),
+                    // no tiene permiso para entrar al portal web.
+                    // ==============================================================
                     if (!rol.equals("ADMIN") && !rol.equals("CLIENTE")) {
-                        log.warn("Rol no permitido para el usuario {}: {}",
-                                email, rol);
-
+                        log.warn("Acceso denegado a la web para {} (rol: {}, plan: {})", email, rol, plan);
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body("El rol del usuario no está autorizado");
+                                .body("Para ingresar tienes que tener plan");
                     }
 
                     UserDetails userDetails = User.builder()
@@ -107,7 +108,6 @@ public class AuthController {
                             .build();
 
                     String token = jwtUtil.generateToken(userDetails);
-
                     String redirectUrl = determineRedirectUrl(rol);
 
                     LoginResponse response = LoginResponse.builder()
@@ -118,17 +118,12 @@ public class AuthController {
                             .redirectUrl(redirectUrl)
                             .build();
 
-                    log.info("Inicio de sesión completado para {} con rol {}",
-                            email, rol);
-
+                    log.info("Inicio de sesión completado para {} con rol {}", email, rol);
                     return ResponseEntity.ok(response);
                 })
                 .exceptionally(ex -> {
-                    log.error("Error consultando el usuario en Firestore",
-                            ex);
-
-                    return ResponseEntity.status(
-                                    HttpStatus.INTERNAL_SERVER_ERROR)
+                    log.error("Error consultando el usuario en Firestore", ex);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body("Error interno al consultar el usuario");
                 });
     }
@@ -137,8 +132,7 @@ public class AuthController {
     public CompletableFuture<ResponseEntity<?>> registro(
             @Valid @RequestBody UsuarioFirestore usuario) {
 
-        if (usuario.getEmail() == null
-                || usuario.getEmail().isBlank()) {
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
             return CompletableFuture.completedFuture(
                     ResponseEntity.badRequest()
                             .body("El correo electrónico es obligatorio"));
@@ -156,6 +150,33 @@ public class AuthController {
                                         .body("El correo ya está registrado"));
                     }
 
+                    // ==============================================================
+                    // ASIGNACIÓN DE ROLES Y PLANES SEGÚN SELECCIÓN EN LA WEB
+                    // ==============================================================
+                    String planInput = (usuario.getPlan() != null)
+                            ? usuario.getPlan().trim().toUpperCase(Locale.ROOT)
+                            : "";
+
+                    if (planInput.contains("PREMIUM")) {
+                        // Plan Socio Premium ($25)
+                        usuario.setRol("CLIENTE");
+                        usuario.setPlan("PREMIUM");
+                    } else if (planInput.contains("SOCIO")) {
+                        // Plan Socio TurisMap ($15)
+                        usuario.setRol("CLIENTE");
+                        usuario.setPlan("SOCIO");
+                    } else if (planInput.contains("BASICO") || planInput.contains("BÁSICO")) {
+                        // REGLA 1: Presencia Básica ($5) crea cuenta pero queda como VIAJERO sin portal
+                        usuario.setRol("VIAJERO");
+                        usuario.setPlan("BASICO");
+                    } else {
+                        // Registro común de turista o sin selección previa
+                        if (usuario.getRol() == null || usuario.getRol().isBlank()) {
+                            usuario.setRol("VIAJERO");
+                        }
+                        usuario.setPlan("NINGUNO");
+                    }
+
                     String uid = java.util.UUID.randomUUID().toString();
 
                     return usuarioFirestoreService
@@ -166,9 +187,7 @@ public class AuthController {
                 })
                 .exceptionally(ex -> {
                     log.error("Error durante el registro en Firestore", ex);
-
-                    return ResponseEntity.status(
-                                    HttpStatus.INTERNAL_SERVER_ERROR)
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body("Error interno durante el registro");
                 });
     }

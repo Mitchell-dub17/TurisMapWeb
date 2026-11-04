@@ -1,14 +1,19 @@
 package com.turismap.admin.config;
 
+import com.turismap.admin.model.CategoriaComercio;
 import com.turismap.admin.model.Lugar;
+import com.turismap.admin.model.PlanComercio;
 import com.turismap.admin.model.UsuarioFirestore;
+import com.turismap.admin.service.CategoriaComercioService;
 import com.turismap.admin.service.LugarService;
+import com.turismap.admin.service.PlanComercioService;
 import com.turismap.admin.service.UsuarioFirestoreService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +25,8 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UsuarioFirestoreService usuarioFirestoreService;
     private final LugarService lugarService;
+    private final PlanComercioService planComercioService;
+    private final CategoriaComercioService categoriaComercioService;
 
     @Override
     public void run(String... args) throws Exception {
@@ -30,6 +37,12 @@ public class DataInitializer implements CommandLineRunner {
         
         // Crear lugares de prueba (municipios de la Ruta de las Flores)
         crearLugaresDePrueba();
+        
+        // Crear planes de comercio
+        crearPlanesDeComercio();
+        
+        // Crear categorías de comercio
+        crearCategoriasDeComercio();
         
         log.info("Carga de datos de prueba completada");
     }
@@ -274,5 +287,143 @@ public class DataInitializer implements CommandLineRunner {
         stats.put("stat4Icon", icon4);
         stats.put("stat4Texto", text4);
         return stats;
+    }
+
+    private void crearPlanesDeComercio() {
+        // Presencia Básica
+        PlanComercio presenciaBasica = PlanComercio.builder()
+                .nombre("Presencia Básica")
+                .descripcion("Propuesta inicial de referencia. El alcance y las condiciones se confirmarán antes de activar el plan.")
+                .beneficios(Arrays.asList(
+                        "Perfil del negocio en el directorio de TurisMap.",
+                        "Información de contacto, ubicación, categoría y horario.",
+                        "Asociación del negocio con su municipio."
+                ))
+                .orden(1)
+                .activo(true)
+                .build();
+
+        planComercioService.obtenerPlanPorId("presencia_basica")
+                .thenCompose(existing -> {
+                    if (existing == null) {
+                        return planComercioService.crearPlan("presencia_basica", presenciaBasica)
+                                .thenAccept(p -> log.info("Plan creado: {}", p.getNombre()));
+                    }
+                    return CompletableFuture.completedFuture(null);
+                })
+                .join();
+
+        // Socio TurisMap
+        PlanComercio socioTurismap = PlanComercio.builder()
+                .nombre("Socio TurisMap")
+                .descripcion("Propuesta inicial de referencia para negocios que buscan mayor presencia. El alcance y las condiciones se confirmarán antes de activar el plan.")
+                .beneficios(Arrays.asList(
+                        "Incluye la presencia del negocio en el directorio.",
+                        "Opción de mostrar una galería de imágenes del negocio.",
+                        "Posibilidad de destacar el negocio en contenidos y guías de TurisMap."
+                ))
+                .orden(2)
+                .activo(true)
+                .build();
+
+        planComercioService.obtenerPlanPorId("socio_turismap")
+                .thenCompose(existing -> {
+                    if (existing == null) {
+                        return planComercioService.crearPlan("socio_turismap", socioTurismap)
+                                .thenAccept(p -> log.info("Plan creado: {}", p.getNombre()));
+                    }
+                    return CompletableFuture.completedFuture(null);
+                })
+                .join();
+
+        // Socio Premium
+        PlanComercio socioPremium = PlanComercio.builder()
+                .nombre("Socio Premium")
+                .descripcion("Propuesta inicial de referencia para negocios que buscan una promoción más amplia. El alcance y las condiciones se confirmarán antes de activar el plan.")
+                .beneficios(Arrays.asList(
+                        "Incluye las opciones de presencia y promoción de los otros planes.",
+                        "Posibilidad de una ubicación destacada en espacios del directorio.",
+                        "Posibilidad de participar en campañas y contenidos promocionales."
+                ))
+                .orden(3)
+                .activo(true)
+                .build();
+
+        planComercioService.obtenerPlanPorId("socio_premium")
+                .thenCompose(existing -> {
+                    if (existing == null) {
+                        return planComercioService.crearPlan("socio_premium", socioPremium)
+                                .thenAccept(p -> log.info("Plan creado: {}", p.getNombre()));
+                    }
+                    return CompletableFuture.completedFuture(null);
+                })
+                .join();
+    }
+
+    private void crearCategoriasDeComercio() {
+        // Cafetería / Bar
+        CategoriaComercio cafeteriaBar = CategoriaComercio.builder()
+                .id("cafeteria_bar")
+                .nombre("Cafetería / Bar")
+                .descripcion("Establecimientos que ofrecen café, bebidas y aperitivos")
+                .orden(1)
+                .activo(true)
+                .build();
+
+        categoriaComercioService.actualizarCategoria("cafeteria_bar", cafeteriaBar)
+                .thenAccept(c -> log.info("Categoría actualizada/creada: {}", c.getNombre()))
+                .join();
+
+        // Restaurante / Comida Típica
+        CategoriaComercio restauranteComida = CategoriaComercio.builder()
+                .id("restaurante_comida")
+                .nombre("Restaurante / Comida Típica")
+                .descripcion("Restaurantes y locales de comida tradicional salvadoreña")
+                .orden(2)
+                .activo(true)
+                .build();
+
+        categoriaComercioService.actualizarCategoria("restaurante_comida", restauranteComida)
+                .thenAccept(c -> log.info("Categoría actualizada/creada: {}", c.getNombre()))
+                .join();
+
+        // Hostal / Hotel / Cabañas
+        CategoriaComercio hotelCabañas = CategoriaComercio.builder()
+                .id("hotel_cabanas")
+                .nombre("Hostal / Hotel / Cabañas")
+                .descripcion("Alojamiento turístico: hostales, hoteles y cabañas")
+                .orden(3)
+                .activo(true)
+                .build();
+
+        categoriaComercioService.actualizarCategoria("hotel_cabanas", hotelCabañas)
+                .thenAccept(c -> log.info("Categoría actualizada/creada: {}", c.getNombre()))
+                .join();
+
+        // Artesanías / Souvenirs
+        CategoriaComercio artesanias = CategoriaComercio.builder()
+                .id("artesanias_souvenirs")
+                .nombre("Artesanías / Souvenirs")
+                .descripcion("Tiendas de artesanías locales y souvenirs turísticos")
+                .orden(4)
+                .activo(true)
+                .build();
+
+        categoriaComercioService.actualizarCategoria("artesanias_souvenirs", artesanias)
+                .thenAccept(c -> log.info("Categoría actualizada/creada: {}", c.getNombre()))
+                .join();
+
+        // Tours / Aventura
+        CategoriaComercio toursAventura = CategoriaComercio.builder()
+                .id("tours_aventura")
+                .nombre("Tours / Aventura")
+                .descripcion("Operadores de turismo, tours guiados y actividades de aventura")
+                .orden(5)
+                .activo(true)
+                .build();
+
+        categoriaComercioService.actualizarCategoria("tours_aventura", toursAventura)
+                .thenAccept(c -> log.info("Categoría actualizada/creada: {}", c.getNombre()))
+                .join();
     }
 }

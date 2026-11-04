@@ -3,458 +3,1102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TurisMap - Centro de Control</title>
+    <title>TurisMap Admin - Panel de Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/admin.css}">
+
     <style>
-        .nav-icon {
-            display: inline-flex;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: #F8FAFC;
+            color: #0F172A;
+            min-height: 100vh;
+        }
+
+        /* 1. ESTRUCTURA PRINCIPAL FLEX: Alinea Sidebar y Contenido Lado a Lado */
+        .admin-layout {
+            display: flex !important;
+            flex-direction: row !important;
+            min-height: 100vh !important;
+            width: 100% !important;
+            background-color: #F8FAFC !important;
+            align-items: stretch !important;
+        }
+
+        /* 2. SIDEBAR FIJO A LA IZQUIERDA */
+        .sidebar {
+            width: 260px !important;
+            min-width: 260px !important;
+            max-width: 260px !important;
+            background: #0B0F19 !important;
+            color: #FFFFFF !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: sticky !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 100 !important;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-icon {
+            font-size: 22px;
+        }
+
+        .brand-text h2 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+
+        .brand-text small {
+            font-size: 9px;
+            font-weight: 800;
+            color: #6366F1;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar nav {
+            flex: 1;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94A3B8;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar nav a:hover {
+            color: #FFFFFF;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar nav a.active {
+            background: #4F46E5 !important;
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        .sidebar-footer {
+            padding: 16px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: auto;
+        }
+
+        .btn-logout {
+            display: flex;
             align-items: center;
             justify-content: center;
-            vertical-align: middle;
-            margin-right: 8px;
+            gap: 10px;
+            width: 100%;
+            padding: 11px 16px;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #EF4444;
+            color: #FFFFFF;
+        }
+
+        /* 3. CONTENEDOR PRINCIPAL DERECHO */
+        .main-content {
+            flex: 1 !important;
+            min-width: 0 !important;
+            background: #F8FAFC !important;
+            padding: 36px 44px !important;
+            min-height: 100vh !important;
+            overflow-x: hidden !important;
+        }
+
+        .content-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0F172A;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .page-subtitle {
+            font-size: 13.5px;
+            color: #64748B;
+        }
+
+        /* VISIBILIDAD DE VISTAS */
+        .vista-activa {
+            display: block !important;
+        }
+
+        .vista-oculta {
+            display: none !important;
+        }
+
+        /* FORMULARIOS Y CUADRÍCULA */
+        .form-container {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            margin-bottom: 32px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .span-1 { grid-column: span 1; }
+        .span-2 { grid-column: span 2; }
+        .span-3 { grid-column: span 3; }
+        .span-4 { grid-column: span 4; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: #0F172A;
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #6366F1;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #4F46E5;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 24px 0 14px 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        /* DROPZONE Y FOTOS */
+        .dropzone-box {
+            border: 2px dashed #CBD5E1;
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            color: #64748B;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dropzone-box:hover, .dropzone-box.dragover {
+            border-color: #6366F1;
+            background: rgba(99, 102, 241, 0.04);
+            color: #4F46E5;
+        }
+
+        .dropzone-box p {
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .dropzone-box small {
+            font-size: 11px;
+            color: #94A3B8;
+        }
+
+        .url-directa-box {
+            margin-top: 12px;
+        }
+
+        .url-directa-box label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #64748B;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .input-btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-btn-group input {
+            flex: 1;
+        }
+
+        .miniaturas-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .miniatura-item {
+            position: relative;
+            width: 76px;
+            height: 76px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #E2E8F0;
+        }
+
+        .miniatura-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .miniatura-eliminar {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(239, 68, 68, 0.85);
+            color: #FFF;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* BOTONES GLOBALES */
+        .btn-primary {
+            background: #4F46E5;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #4338CA;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #F1F5F9;
+            color: #334155;
+            border: 1px solid #E2E8F0;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #E2E8F0;
+            color: #0F172A;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #DC2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: #DC2626;
+            color: #FFFFFF;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        /* CONTENEDOR DEL MOCKUP EN VIVO */
+        .preview-section-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 24px;
+            padding-top: 28px;
+            border-top: 2px dashed #E2E8F0;
+        }
+
+        .preview-section-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #64748B;
+            letter-spacing: 1.2px;
+            margin-bottom: 16px;
+        }
+
+        .card-preview-mockup {
+            width: 360px;
+            background: #FFFFFF;
+            border-radius: 18px;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .preview-media-wrapper {
+            position: relative;
+            height: 190px;
+            background: #E2E8F0;
+        }
+
+        .preview-media-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-preview-cat {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            color: #FFFFFF;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .preview-body-content {
+            padding: 16px;
+        }
+
+        .preview-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-title-row h4 {
+            font-size: 15.5px;
+            font-weight: 800;
+            color: #0F172A;
+            margin: 0;
+        }
+
+        .preview-rating {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #F59E0B;
+        }
+
+        .preview-muni-row {
+            margin: 4px 0 8px;
+            font-size: 12px;
+            color: #64748B;
+            font-weight: 600;
+        }
+
+        .preview-desc-text {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.45;
+            margin-bottom: 12px;
+        }
+
+        .preview-tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .preview-tag-pill {
+            background: #F1F5F9;
+            color: #475569;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .preview-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #F1F5F9;
+            padding-top: 12px;
+        }
+
+        .preview-price-label {
+            display: block;
+            font-size: 10px;
+            color: #94A3B8;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .preview-price-val {
+            font-size: 14.5px;
+            color: #0F172A;
+            font-weight: 800;
+        }
+
+        .btn-preview-map {
+            background: #4F46E5;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* MODAL FLOTANTE (OCULTO POR DEFECTO) */
+        .modal-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            background: rgba(15, 23, 42, 0.75) !important;
+            backdrop-filter: blur(6px) !important;
+            display: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 9999 !important;
+            padding: 20px !important;
+        }
+
+        .modal-overlay.active {
+            display: flex !important;
         }
     </style>
 </head>
 <body>
-<div class="dashboard-container">
+
+<div class="admin-layout">
+    <!-- ========================================================
+         SIDEBAR / NAVEGACIÓN LATERAL
+         ======================================================== -->
     <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                    <line x1="8" y1="2" x2="8" y2="18"></line>
-                    <line x1="16" y1="6" x2="16" y2="22"></line>
-                </svg>
+        <div class="sidebar-brand">
+            <span class="brand-icon">📍</span>
+            <div class="brand-text">
+                <h2>TurisMap</h2>
+                <small>ADMINISTRACIÓN</small>
             </div>
-            <h2>TurisMap Admin</h2>
         </div>
+
         <nav>
-            <ul>
-                <li>
-                    <a href="#" id="nav-negocios" class="active" onclick="cambiarVista('negocios')">
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                            </span> Agregar Negocio
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="nav-municipios" onclick="cambiarVista('municipios')">
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 21h18"></path>
-                                    <path d="M5 21V7l7-4 7 4v14"></path>
-                                    <path d="M9 10h6v11H9z"></path>
-                                </svg>
-                            </span> Gestionar Pueblos
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="nav-usuarios" onclick="cambiarVista('usuarios')">
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                            </span> Usuarios y Roles
-                    </a>
-                </li>
-                <li>
-                    <a href="#" id="nav-registrados" onclick="cambiarVista('registrados')">
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                                </svg>
-                            </span> Negocios Registrados
-                    </a>
-                </li>
-                <li style="margin-top: 30px;">
-                    <a href="#" onclick="cerrarSesion()" style="color: #ef4444;">
-                            <span class="nav-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
-                            </span> Cerrar Sesión
-                    </a>
-                </li>
-            </ul>
+            <a href="javascript:void(0)" id="nav-negocios" class="active" onclick="cambiarVista('negocios')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Agregar Negocio</span>
+            </a>
+
+            <a href="javascript:void(0)" id="nav-municipios" onclick="cambiarVista('municipios')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Gestionar Pueblos</span>
+            </a>
+
+            <a href="javascript:void(0)" id="nav-usuarios" onclick="cambiarVista('usuarios')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Usuarios y Roles</span>
+            </a>
+
+            <a href="javascript:void(0)" id="nav-registrados" onclick="cambiarVista('registrados')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                <span>Negocios Registrados</span>
+            </a>
+
+            <a href="javascript:void(0)" id="nav-solicitudes" onclick="cambiarVista('solicitudes')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Solicitudes de Planes</span>
+            </a>
         </nav>
+
+        <div class="sidebar-footer">
+            <button type="button" class="btn-logout" onclick="cerrarSesion()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
     </aside>
 
+    <!-- ========================================================
+         CONTENIDO PRINCIPAL
+         ======================================================== -->
     <main class="main-content">
-        <!-- VISTA 1: AGREGAR / EDITAR NEGOCIO -->
-        <div id="vista-negocios" class="vista-activa fade-in">
-            <header class="page-header">
+
+        <!-- ====================================================
+             1. VISTA: AGREGAR / EDITAR NEGOCIO
+             ==================================================== -->
+        <div id="vista-negocios" class="vista-activa">
+            <div class="content-header">
                 <div>
-                    <h1>Registrar en Directorio</h1>
-                    <p>Añade nuevos atractivos, hoteles o restaurantes a la Ruta de las Flores.</p>
-
+                    <h1 class="page-title">Registrar en Directorio</h1>
+                    <p class="page-subtitle">Añade nuevos atractivos, hoteles o restaurantes a la Ruta de las Flores.</p>
                 </div>
-            </header>
+            </div>
 
-            <form id="formAgregarNegocio">
-                <input type="hidden" id="comercio-id">
-                <div class="form-row">
-                    <div class="form-group flex-1">
-                        <label for="nombre">Nombre del Establecimiento</label>
+            <form id="formAgregarNegocio" class="form-container" novalidate>
+                <input type="hidden" id="comercio-id" value="">
+
+                <div class="form-grid">
+                    <div class="form-group span-2">
+                        <label for="nombre">Nombre del Establecimiento *</label>
                         <input type="text" id="nombre" placeholder="Ej. Café de la Abuela" required>
                     </div>
-                    <div class="form-group flex-1">
-                        <label for="municipio">Municipio</label>
+
+                    <div class="form-group span-2">
+                        <label for="municipio">Municipio *</label>
                         <select id="municipio" required>
                             <option value="">Selecciona ubicación...</option>
                         </select>
                     </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-group flex-1">
-                        <label for="tipo">Categoría</label>
+                    <div class="form-group span-2">
+                        <label for="tipo">Categoría *</label>
                         <select id="tipo" required>
                             <option value="">Selecciona una...</option>
-                            <option value="restaurante">Restaurante / Cafetería</option>
-                            <option value="hotel">Hotel / Hostal</option>
-                            <option value="artesania">Tienda de Artesanías</option>
-                            <option value="atractivo">Atractivo Natural / Cascada</option>
+                            <option value="Cafetería / Bar">Cafetería / Bar</option>
+                            <option value="Restaurante / Comida Típica">Restaurante / Comida Típica</option>
+                            <option value="Hostal / Hotel / Cabañas">Hostal / Hotel / Cabañas</option>
+                            <option value="Atractivo Natural / Cascada">Atractivo Natural / Cascada</option>
+                            <option value="Artesanías / Souvenirs">Artesanías / Souvenirs</option>
+                            <option value="Tours / Aventura">Tours / Aventura</option>
                         </select>
                     </div>
-                    <div class="form-group flex-2">
+
+                    <div class="form-group span-2">
                         <label for="llamativo">Cosas Llamativas (Separadas por coma)</label>
-                        <input type="text" id="llamativo" placeholder="Ej. Vista a la montaña, Música en vivo...">
+                        <input type="text" id="llamativo" placeholder="Ej. Vista a la montaña, Música en vivo, Café de altura">
+                    </div>
+
+                    <div class="form-group span-4">
+                        <label for="descripcion">Descripción General *</label>
+                        <textarea id="descripcion" rows="3" placeholder="Describe el ambiente y qué ofrece el lugar a los turistas..."></textarea>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="descripcion">Descripción General</label>
-                    <textarea id="descripcion" rows="3" placeholder="Describe el ambiente y qué ofrece el lugar..."></textarea>
-                </div>
+                <div class="section-title">DATOS DE CONTACTO Y OPERACIÓN</div>
+                <div class="form-grid">
+                    <div class="form-group span-2">
+                        <label for="direccion">Dirección Física *</label>
+                        <input type="text" id="direccion" placeholder="Ej. 2da Avenida Norte, Barrio El Centro">
+                    </div>
 
-                <div class="form-section-divider">Datos de Contacto y Operación</div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="direccion">Dirección Física</label>
-                        <input type="text" id="direccion" placeholder="Ej. 2da Avenida Norte" required>
+                    <div class="form-group span-2">
+                        <label for="telefono">Teléfono de Contacto *</label>
+                        <input type="tel" id="telefono" placeholder="Ej. 7000-0000">
                     </div>
-                    <div class="form-group">
-                        <label for="telefono">Teléfono de Contacto</label>
-                        <input type="tel" id="telefono" placeholder="Ej. 7000-0000" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
+
+                    <div class="form-group span-2">
                         <label for="sitioWeb">Sitio Web / Red Social</label>
-                        <input type="url" id="sitioWeb" placeholder="Ej. https://facebook.com/minegocio">
+                        <input type="url" id="sitioWeb" placeholder="Ej. https://instagram.com/minegocio">
                     </div>
+
                     <div class="form-group">
                         <label for="horario">Horario de Atención</label>
-                        <input type="text" id="horario" placeholder="Ej. Lunes a Domingo, 8am - 5pm">
+                        <input type="text" id="horario" placeholder="Ej. Lun a Dom, 8am - 6pm">
                     </div>
+
                     <div class="form-group">
                         <label for="precioDesde">Precio Desde ($)</label>
-                        <input type="number" step="0.01" id="precioDesde" placeholder="Ej. 2.50">
+                        <input type="number" step="0.25" id="precioDesde" placeholder="Ej. 2.50">
                     </div>
                 </div>
 
-                <div class="form-section-divider">Propietario y Multimedia</div>
-                <div class="form-row">
-                    <div class="form-group flex-1">
-                        <label for="propietarioUid">UID del Propietario (Firebase Auth)</label>
-                        <input type="text" id="propietarioUid" placeholder="ID del usuario dueño del negocio" required>
+                <div class="section-title">PROPIETARIO Y MULTIMEDIA</div>
+                <div class="form-grid">
+                    <div class="form-group span-1">
+                        <label for="propietarioUid">UID Propietario (Firebase)</label>
+                        <input type="text" id="propietarioUid" placeholder="ID de usuario opcional">
                     </div>
-                    <div class="form-section-divider">Fotografías del Establecimiento</div>
-                    <div class="form-group">
-                        <!-- Zona de arrastre y clic -->
-                        <div class="dropzone-box" id="dropzone" onclick="document.getElementById('input-fotos').click()">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                            <p style="margin: 8px 0 4px 0; font-weight: 600; color: #1e293b; font-size: 14px;">
-                                Haz clic o arrastra las fotos de tu local aquí
-                            </p>
-                            <span style="font-size: 12px; color: #94a3b8;">Formatos JPG, PNG o WebP (hasta 10 MB c/u)</span>
-                            <input type="file" id="input-fotos" accept="image/*" multiple style="display: none;">
+
+                    <div class="form-group span-3">
+                        <label>Fotografías del Establecimiento</label>
+                        <div id="dropzone" class="dropzone-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            <p>Haz clic o arrastra las fotos de tu local aquí</p>
+                            <small>Formatos JPG, PNG o WebP (hasta 10 MB c/u)</small>
+                            <input type="file" id="input-fotos" multiple accept="image/*" style="display:none;">
                         </div>
 
-                        <!-- Alternativa Admin: Agregar fotos mediante URL directa -->
-                        <div class="mt-3">
-                            <label class="form-label text-secondary small fw-bold">
-                                <i class="fas fa-link"></i> O agregar imagen mediante URL directa:
-                            </label>
-                            <div class="input-group">
-                                <input type="url"
-                                       id="adminInputUrlDirecta"
-                                       class="form-control form-control-sm"
-                                       placeholder="https://images.unsplash.com/... o enlace directo .jpg/.png">
-                                <button class="btn btn-dark btn-sm" type="button" id="btnAdminAgregarUrl">
-                                    <i class="fas fa-plus"></i> Añadir a la lista
-                                </button>
+                        <div class="url-directa-box">
+                            <label for="adminInputUrlDirecta">O agregar imagen mediante URL directa:</label>
+                            <div class="input-btn-group">
+                                <input type="url" id="adminInputUrlDirecta" placeholder="https://ejemplo.com/foto.jpg">
+                                <button type="button" id="btnAdminAgregarUrl" class="btn-secondary">Añadir a la lista</button>
                             </div>
-                            <small class="text-muted" style="font-size: 11px;">
-                                Puedes pegar enlaces web directamente mientras se activa Cloud Storage.
-                            </small>
                         </div>
 
-                        <!-- Contenedor de miniaturas con botón para quitar -->
                         <div id="contenedor-miniaturas" class="miniaturas-grid"></div>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="btn-cancelar-comercio" style="display: none; margin-right: 10px;" onclick="cancelarEdicionComercio()">Cancelar Edición</button>
-                    <button type="submit" class="btn-primary" id="btn-submit-comercio">Guardar en Firebase</button>
+                    <button type="button" id="btn-cancelar-comercio" class="btn-secondary" style="display:none;" onclick="cancelarEdicionComercio()">Cancelar Edición</button>
+                    <button type="submit" id="btn-submit-comercio" class="btn-primary">Guardar en Firebase</button>
                 </div>
             </form>
-            <!-- VISTA: ventada previa de la app -->
 
-            <div class="editor-layout" style="display: flex; gap: 24px; align-items: flex-start;">
+            <!-- VISTA PREVIA REACTIVA (MOCKUP EN VIVO) -->
+            <div class="preview-section-container">
+                <span class="preview-section-label">VISTA PREVIA (APP TURISMAP)</span>
 
-                <!-- Tu formulario actual (envuelto en un div con flex: 1.2) -->
-                <div style="flex: 1.2; width: 100%;">
-                    <!-- AQUÍ VA TU <form id="formAgregarNegocio"> ... </form> -->
-                </div>
+                <div class="card-preview-mockup">
+                    <div class="preview-media-wrapper">
+                        <span id="prev-categoria" class="badge-preview-cat">Categoría</span>
+                        <img id="prev-imagen" src="https://placehold.co/400x220?text=Sin+Imagen" alt="Vista previa">
+                    </div>
 
-                <!-- MOCKUP MÓVIL EN TIEMPO REAL -->
-                <div class="preview-container" style="margin-top: 40px; display: flex; flex-direction: column; align-items: center; width: 100%;">
-        <span style="font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 10px;">
-            Vista Previa (App TurisMap)
-        </span>
-
-                    <!-- Marco de Teléfono / Tarjeta Mobile -->
-                    <div class="mobile-card-preview">
-                        <div class="preview-img-box">
-                            <img id="prev-imagen" src="https://via.placeholder.com/400x220?text=Sin+Imagen" alt="Portada">
-                            <span class="preview-badge" id="prev-categoria">Restaurante</span>
+                    <div class="preview-body-content">
+                        <div class="preview-title-row">
+                            <h4 id="prev-nombre">Nombre del Establecimiento</h4>
+                            <span class="preview-rating">⭐ 5.0</span>
                         </div>
 
-                        <div class="preview-body">
-                            <div class="preview-header-row">
-                                <h3 id="prev-nombre">Nombre del Establecimiento</h3>
-                                <div class="preview-rating">⭐ 5.0</div>
-                            </div>
+                        <p class="preview-muni-row">
+                            📍 <span id="prev-municipio">Municipio seleccionado</span>
+                        </p>
 
-                            <p class="preview-municipio" id="prev-municipio">📍 Municipio seleccionado</p>
-                            <p class="preview-desc" id="prev-descripcion">Aquí se mostrará la descripción del negocio tal como la leerá el turista...</p>
+                        <p id="prev-descripcion" class="preview-desc-text">
+                            Aquí se mostrará la descripción del negocio tal como la leerá el turista...
+                        </p>
 
-                            <div class="preview-chips" id="prev-chips">
-                                <span class="chip">Vista panorámica</span>
-                            </div>
+                        <div id="prev-llamativo" class="preview-tags-row">
+                            <span class="preview-tag-pill">Vista panorámica</span>
+                        </div>
 
-                            <div class="preview-footer">
-                                <div>
-                                    <span style="font-size: 11px; color: #94a3b8; display: block;">Precio sugerido</span>
-                                    <strong id="prev-precio" style="color: #0f172a; font-size: 16px;">Desde $0.00</strong>
-                                </div>
-                                <button type="button" class="btn-preview-demo">Ver en Mapa</button>
+                        <div class="preview-footer-row">
+                            <div>
+                                <small class="preview-price-label">Precio sugerido</small>
+                                <strong id="prev-precio" class="preview-price-val">Desde $0.00</strong>
                             </div>
+                            <button type="button" class="btn-preview-map">Ver en Mapa</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             2. VISTA: GESTIONAR PUEBLOS / MUNICIPIOS
+             ==================================================== -->
+        <div id="vista-municipios" class="vista-oculta">
+            <div id="panel-tabla-lugares">
+                <div class="content-header">
+                    <div>
+                        <h1 class="page-title">Pueblos y Atractivos</h1>
+                        <p class="page-subtitle">Administra los municipios principales que componen la Ruta de las Flores.</p>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="abrirFormLugar()">+ Nuevo Municipio</button>
+                </div>
+
+                <div class="table-card-pro">
+                    <table class="solicitudes-table">
+                        <thead>
+                        <tr>
+                            <th>MUNICIPIO</th>
+                            <th>CATEGORÍA</th>
+                            <th>CALIFICACIÓN</th>
+                            <th>CLIMA</th>
+                            <th style="text-align: right;">ACCIONES</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabla-municipios-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SUB-PANEL FORMULARIO MUNICIPIO -->
+            <div id="panel-form-lugar" class="vista-oculta">
+                <div class="content-header">
+                    <div>
+                        <h1 id="lugar-form-title" class="page-title">Registrar Nuevo Municipio</h1>
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="cerrarFormLugar()">Volver al Listado</button>
+                </div>
+
+                <form id="formLugar" class="form-container" novalidate>
+                    <input type="hidden" id="lugar-id" value="">
+
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="lugar-nombre">Nombre del Pueblo *</label>
+                            <input type="text" id="lugar-nombre" placeholder="Ej. Apaneca" required>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="lugar-subtitulo">Subtítulo Descriptivo</label>
+                            <input type="text" id="lugar-subtitulo" placeholder="Ej. La ciudad de los vientos y el café">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="lugar-categoria">Categoría</label>
+                            <input type="text" id="lugar-categoria" value="TODOS">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="lugar-imagen">URL Imagen Portada</label>
+                            <input type="url" id="lugar-imagen" placeholder="https://...">
+                        </div>
+                        <div class="form-group span-4">
+                            <label for="lugar-historia">Historia y Reseña</label>
+                            <textarea id="lugar-historia" rows="3"></textarea>
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="lugar-ubiCorta">Ubicación Corta</label>
+                            <input type="text" id="lugar-ubiCorta" placeholder="Ahuachapán">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="lugar-ubiLarga">Ubicación Larga / Carretera</label>
+                            <input type="text" id="lugar-ubiLarga" placeholder="Ahuachapán, Ruta CA-8">
+                        </div>
+                        <div class="form-group">
+                            <label for="lugar-elevacion">Elevación</label>
+                            <input type="text" id="lugar-elevacion" placeholder="1,470 msnm">
+                        </div>
+                        <div class="form-group">
+                            <label for="lugar-clima">Clima Típico</label>
+                            <input type="text" id="lugar-clima" placeholder="16°C a 22°C">
+                        </div>
+                        <div class="form-group">
+                            <label for="lugar-lat">Latitud</label>
+                            <input type="number" step="any" id="lugar-lat" placeholder="13.8569">
+                        </div>
+                        <div class="form-group">
+                            <label for="lugar-lng">Longitud</label>
+                            <input type="number" step="any" id="lugar-lng" placeholder="-89.8033">
+                        </div>
+                        <div class="form-group">
+                            <label for="lugar-calificacion">Calificación</label>
+                            <input type="number" step="0.1" id="lugar-calificacion" placeholder="4.9">
+                        </div>
+                        <div class="form-group">
+                            <label for="lugar-resenas">Cant. Reseñas</label>
+                            <input type="number" id="lugar-resenas" placeholder="120">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="lugar-tempTit">Mejor Temporada (Título)</label>
+                            <input type="text" id="lugar-tempTit" placeholder="Noviembre a Febrero">
+                        </div>
+                        <div class="form-group span-4">
+                            <label for="lugar-tempDesc">Mejor Temporada (Descripción)</label>
+                            <input type="text" id="lugar-tempDesc" placeholder="Clima fresco y época de corte de café.">
+                        </div>
+                    </div>
+
+                    <div class="section-title">ESTADÍSTICAS DEL PUEBLO</div>
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="stat-titGral">Título Estadísticas</label>
+                            <input type="text" id="stat-titGral" placeholder="Directorio Activo">
+                        </div>
+                        <div class="form-group span-2">
+                            <label for="stat-descGral">Descripción Estadísticas</label>
+                            <input type="text" id="stat-descGral" placeholder="Comercios verificados">
+                        </div>
+                        <div class="form-group"><input type="text" id="st1-ico" placeholder="Icono 1"><input type="text" id="st1-txt" placeholder="Texto 1"></div>
+                        <div class="form-group"><input type="text" id="st2-ico" placeholder="Icono 2"><input type="text" id="st2-txt" placeholder="Texto 2"></div>
+                        <div class="form-group"><input type="text" id="st3-ico" placeholder="Icono 3"><input type="text" id="st3-txt" placeholder="Texto 3"></div>
+                        <div class="form-group"><input type="text" id="st4-ico" placeholder="Icono 4"><input type="text" id="st4-txt" placeholder="Texto 4"></div>
+                    </div>
+
+                    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>ATRACTIVOS DESTACADOS</span>
+                        <button type="button" class="btn-secondary" onclick="agregarAtractivoFila()">+ Añadir Atractivo</button>
+                    </div>
+                    <div id="atractivos-container"></div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Guardar Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             3. VISTA: GESTIÓN DE USUARIOS Y ROLES
+             ==================================================== -->
+        <div id="vista-usuarios" class="vista-oculta">
+            <div class="content-header">
+                <div>
+                    <h1 class="page-title">Usuarios y Permisos</h1>
+                    <p class="page-subtitle">Modifica privilegios (ADMIN, CLIENTE, VIAJERO) o da de baja cuentas de la plataforma.</p>
+                </div>
+            </div>
+
+            <div class="table-card-pro">
+                <table class="solicitudes-table">
+                    <thead>
+                    <tr>
+                        <th>NOMBRE COMPLETO</th>
+                        <th>CORREO ELECTRÓNICO</th>
+                        <th>ROL ASIGNADO</th>
+                        <th style="text-align: right;">ACCIONES</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabla-usuarios-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             4. VISTA: NEGOCIOS REGISTRADOS
+             ==================================================== -->
+        <div id="vista-registrados" class="vista-oculta">
+            <div class="content-header">
+                <div>
+                    <h1 class="page-title">Negocios Registrados</h1>
+                    <p class="page-subtitle">Listado oficial de establecimientos guardados en Firestore para la app móvil.</p>
+                </div>
+            </div>
+
+            <div class="table-card-pro">
+                <table class="solicitudes-table">
+                    <thead>
+                    <tr>
+                        <th>ESTABLECIMIENTO</th>
+                        <th>CATEGORÍA</th>
+                        <th>ESTADO</th>
+                        <th style="text-align: right;">ACCIONES</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tabla-comercios-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             5. VISTA: SOLICITUDES DE PLANES (REDISEÑO PRO)
+             ==================================================== -->
+        <div id="vista-solicitudes" class="vista-oculta">
+
+            <div class="solicitudes-header">
+                <div>
+                    <div class="badge-plan-header">GESTIÓN COMERCIAL</div>
+                    <h1 class="solicitudes-title">Solicitudes de planes</h1>
+                    <p class="solicitudes-desc">Revisa las solicitudes de registro de comercios y el plan seleccionado por cada uno.</p>
+                </div>
+                <button type="button" class="btn-refresh-pro" id="btn-refrescar-solicitudes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span>Actualizar Lista</span>
+                </button>
+            </div>
+
+            <!-- TARJETAS DE KPIS -->
+            <div class="solicitudes-kpis">
+                <div class="kpi-card" onclick="filtrarPorEstado('TODAS')">
+                    <div class="kpi-info">
+                        <span class="kpi-label">TOTAL SOLICITUDES</span>
+                        <h3 class="kpi-value" id="kpi-total">0</h3>
+                    </div>
+                    <div class="kpi-icon icon-total">📋</div>
+                </div>
+
+                <div class="kpi-card kpi-pending" onclick="filtrarPorEstado('PENDIENTE')">
+                    <div class="kpi-info">
+                        <span class="kpi-label">POR REVISAR</span>
+                        <h3 class="kpi-value" id="kpi-pendientes">0</h3>
+                    </div>
+                    <div class="kpi-icon icon-pending">⏳</div>
+                </div>
+
+                <div class="kpi-card kpi-approved" onclick="filtrarPorEstado('APROBADO')">
+                    <div class="kpi-info">
+                        <span class="kpi-label">APROBADAS</span>
+                        <h3 class="kpi-value" id="kpi-aprobadas">0</h3>
+                    </div>
+                    <div class="kpi-icon icon-approved">✓</div>
+                </div>
+
+                <div class="kpi-card kpi-rejected" onclick="filtrarPorEstado('RECHAZADO')">
+                    <div class="kpi-info">
+                        <span class="kpi-label">DESCARTADAS</span>
+                        <h3 class="kpi-value" id="kpi-rechazadas">0</h3>
+                    </div>
+                    <div class="kpi-icon icon-rejected">✕</div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR: BUSCADOR Y FILTROS -->
+            <div class="solicitudes-toolbar">
+                <div class="search-box-pro">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="input-buscar-solicitud" placeholder="Buscar por negocio, encargado o teléfono...">
+                </div>
+
+                <div class="filter-pills">
+                    <button type="button" class="pill-btn active" data-estado="TODAS" onclick="filtrarPorEstado('TODAS')">Todas</button>
+                    <button type="button" class="pill-btn" data-estado="PENDIENTE" onclick="filtrarPorEstado('PENDIENTE')">Pendientes</button>
+                    <button type="button" class="pill-btn" data-estado="APROBADO" onclick="filtrarPorEstado('APROBADO')">Aprobadas</button>
+                    <button type="button" class="pill-btn" data-estado="RECHAZADO" onclick="filtrarPorEstado('RECHAZADO')">Rechazadas</button>
+                </div>
+            </div>
+
+            <!-- TABLA DE SOLICITUDES -->
+            <div class="table-card-pro">
+                <div class="table-responsive">
+                    <table class="solicitudes-table">
+                        <thead>
+                        <tr>
+                            <th>ESTABLECIMIENTO</th>
+                            <th>PLAN SOLICITADO</th>
+                            <th>PROPIETARIO / CONTACTO</th>
+                            <th>UBICACIÓN EN LA RUTA</th>
+                            <th>REGISTRO</th>
+                            <th>ESTADO</th>
+                            <th style="text-align: right;">ACCIONES</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tbody-solicitudes">
+                        <tr>
+                            <td colspan="7" class="table-loading">
+                                <span>Cargando solicitudes...</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
         </div>
 
-        <!-- VISTA 2: GESTIONAR MUNICIPIOS -->
-        <div id="vista-municipios" class="vista-oculta">
-            <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>Directorio de Municipios</h1>
-                    <p>Visualiza y administra todos los datos de los pueblos.</p>
-                </div>
-                <button class="btn-primary" onclick="abrirFormLugar()">Registrar Pueblo</button>
-            </header>
-
-            <section class="form-card vista-oculta" id="panel-form-lugar" style="margin-bottom: 30px;">
-                <h2 id="lugar-form-title" style="margin-bottom: 20px; font-size: 18px;">Detalles del Municipio</h2>
-                <form id="formLugar">
-                    <input type="hidden" id="lugar-id">
-
-                    <div class="form-section-divider">Información Principal</div>
-                    <div class="form-row">
-                        <div class="form-group flex-1"><label>Nombre</label><input type="text" id="lugar-nombre" required></div>
-                        <div class="form-group flex-1"><label>Subtítulo</label><input type="text" id="lugar-subtitulo"></div>
-                        <div class="form-group flex-1"><label>Categoría</label>
-                            <select id="lugar-categoria" required>
-                                <option value="TODOS">TODOS</option>
-                                <option value="PUEBLO">PUEBLO</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 20px;">
-                        <label>URL de Imagen de Portada</label>
-                        <input type="url" id="lugar-imagen" placeholder="Ej. https://firebasestorage.googleapis.com/.../foto.jpg">
-                    </div>
-                    <div class="form-group">
-                        <label>Historia & Esencia</label>
-                        <textarea id="lugar-historia" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-section-divider">Ubicación y Entorno</div>
-                    <div class="form-row">
-                        <div class="form-group flex-1"><label>Ubicación Corta (Ej. Ahuachapán)</label><input type="text" id="lugar-ubiCorta"></div>
-                        <div class="form-group flex-1"><label>Ubicación Larga (Ej. Ahuachapán, El Salvador)</label><input type="text" id="lugar-ubiLarga"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group flex-1"><label>Elevación</label><input type="text" id="lugar-elevacion"></div>
-                        <div class="form-group flex-1"><label>Clima</label><input type="text" id="lugar-clima"></div>
-                        <div class="form-group flex-1"><label>Latitud</label><input type="number" step="any" id="lugar-lat"></div>
-                        <div class="form-group flex-1"><label>Longitud</label><input type="number" step="any" id="lugar-lng"></div>
-                    </div>
-
-                    <div class="form-section-divider">Rating y Temporada</div>
-                    <div class="form-row">
-                        <div class="form-group flex-1"><label>Calificación (Ej. 4.8)</label><input type="number" step="0.1" id="lugar-calificacion"></div>
-                        <div class="form-group flex-1"><label>Cant. Reseñas</label><input type="number" id="lugar-resenas"></div>
-                        <div class="form-group flex-1"><label>Mejor Temp. (Título)</label><input type="text" id="lugar-tempTit"></div>
-                        <div class="form-group flex-1"><label>Mejor Temp. (Desc)</label><input type="text" id="lugar-tempDesc"></div>
-                    </div>
-
-                    <div class="form-section-divider">Estadísticas del Directorio</div>
-                    <div class="form-row">
-                        <div class="form-group flex-1"><label>Título Tarjeta</label><input type="text" id="stat-titGral"></div>
-                        <div class="form-group flex-2"><label>Descripción Tarjeta</label><input type="text" id="stat-descGral"></div>
-                    </div>
-                    <div class="form-row" style="background: #f8fafc; padding: 15px; border-radius: 8px;">
-                        <div class="form-group flex-1"><label>Stat 1 (Icono | Texto)</label><input type="text" id="st1-ico" placeholder="LocalCafe"><input type="text" id="st1-txt" style="margin-top:5px;" placeholder="14 Cafés"></div>
-                        <div class="form-group flex-1"><label>Stat 2 (Icono | Texto)</label><input type="text" id="st2-ico" placeholder="Home"><input type="text" id="st2-txt" style="margin-top:5px;" placeholder="12 Hoteles"></div>
-                        <div class="form-group flex-1"><label>Stat 3 (Icono | Texto)</label><input type="text" id="st3-ico" placeholder="Restaurant"><input type="text" id="st3-txt" style="margin-top:5px;" placeholder="8 Restaurantes"></div>
-                        <div class="form-group flex-1"><label>Stat 4 (Icono | Texto)</label><input type="text" id="st4-ico" placeholder="Brush"><input type="text" id="st4-txt" style="margin-top:5px;" placeholder="4 Talleres"></div>
-                    </div>
-
-                    <div class="form-section-divider">Atractivos del Lugar</div>
-                    <div id="atractivos-container">
-                        <!-- Filas de atractivos generadas por JS -->
-                    </div>
-                    <button type="button" class="btn-secondary" style="margin-top: 10px;" onclick="agregarAtractivoFila()">+ Añadir Atractivo</button>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary" onclick="cerrarFormLugar()" style="margin-right: 10px;">Cancelar</button>
-                        <button type="submit" class="btn-primary">Guardar Registro</button>
-                    </div>
-                </form>
-            </section>
-
-            <section class="form-card" id="panel-tabla-lugares">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Municipio</th>
-                        <th>Categoría</th>
-                        <th>Rating</th>
-                        <th>Clima</th>
-                        <th>Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tabla-municipios-body">
-                    <!-- Se renderiza dinámicamente -->
-                    </tbody>
-                </table>
-            </section>
-        </div>
-
-        <!-- VISTA 3: USUARIOS -->
-        <div id="vista-usuarios" class="vista-oculta">
-            <header class="page-header">
-                <div>
-                    <h1>Usuarios Registrados</h1>
-                    <p>Administra los permisos de acceso a la aplicación.</p>
-                </div>
-            </header>
-            <section class="form-card">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Usuario</th>
-                        <th>Correo</th>
-                        <th>Rol Actual</th>
-                        <th>Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tabla-usuarios-body">
-                    <!-- Renderizado dinámicamente -->
-                    </tbody>
-                </table>
-            </section>
-        </div>
-
-        <!-- VISTA 4: NEGOCIOS REGISTRADOS (PANTALLA DEDICADA) -->
-        <div id="vista-registrados" class="vista-oculta">
-            <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>Negocios Registrados</h1>
-                    <p>Directorio general de comercios y locales inscritos en la plataforma.</p>
-                </div>
-                <button class="btn-primary" onclick="cambiarVista('negocios')">
-                        <span class="nav-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </span> Registrar Nuevo Negocio
-                </button>
-            </header>
-            <section class="form-card" style="margin-top: 20px; max-width: 100%;">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tabla-comercios-body">
-                    <!-- Renderizado dinámico -->
-                    </tbody>
-                </table>
-            </section>
-
-        </div>
     </main>
 </div>
 
-<script th:src="@{/js/admin.js}"></script>
-<script>
-    // Controlador de cambio de vistas con soporte para la pantalla de Negocios Registrados
-    const funcionOriginalCambiarVista = window.cambiarVista;
-    window.cambiarVista = function(vista) {
-        document.querySelectorAll('[id^="vista-"]').forEach(el => {
-            el.classList.remove('vista-activa', 'fade-in');
-            el.classList.add('vista-oculta');
-        });
-        document.querySelectorAll('.sidebar nav a').forEach(el => {
-            el.classList.remove('active');
-        });
+<!-- ========================================================
+     MODAL: FICHA TÉCNICA DETALLADA DE LA SOLICITUD
+     ======================================================== -->
+<div class="modal-overlay" id="modal-detalle-solicitud">
+    <div class="modal-card modal-detalle-card">
+        <button type="button" class="btn-modal-close" onclick="cerrarDetalleSolicitud()">✕</button>
+        <div class="modal-header">
+            <span class="modal-badge" id="modal-det-badge">DETALLES DEL COMERCIO</span>
+            <h3 class="modal-title" id="modal-det-negocio">Nombre del Negocio</h3>
+            <p class="modal-subtitle" id="modal-det-sub">Municipio · Categoría</p>
+        </div>
 
-        const vistaObjetivo = document.getElementById('vista-' + vista);
-        if (vistaObjetivo) {
-            vistaObjetivo.classList.remove('vista-oculta');
-            vistaObjetivo.classList.add('vista-activa', 'fade-in');
-        }
+        <div class="detalle-grid">
+            <div class="detalle-item">
+                <label>Encargado</label>
+                <strong id="modal-det-encargado">-</strong>
+            </div>
+            <div class="detalle-item">
+                <label>Correo Electrónico</label>
+                <span id="modal-det-email">-</span>
+            </div>
+            <div class="detalle-item">
+                <label>WhatsApp Oficial</label>
+                <div id="modal-det-whatsapp-wrapper">-</div>
+            </div>
+            <div class="detalle-item">
+                <label>Fecha de Solicitud</label>
+                <span id="modal-det-fecha">-</span>
+            </div>
+            <div class="detalle-item">
+                <label>Plan solicitado</label>
+                <span id="modal-det-plan">-</span>
+            </div>
+            <div class="detalle-item">
+                <label>UID del propietario</label>
+                <span id="modal-det-propietario-uid">-</span>
+            </div>
+            <div class="detalle-item">
+                <label>Horario</label>
+                <span id="modal-det-horario">-</span>
+            </div>
+            <div class="detalle-item">
+                <label>Sitio web</label>
+                <a id="modal-det-sitio-web" target="_blank" rel="noopener noreferrer">No especificado</a>
+            </div>
+            <div class="detalle-item full-width">
+                <label>Dirección Física o Referencia</label>
+                <p id="modal-det-direccion" class="detalle-box">-</p>
+            </div>
+            <div class="detalle-item full-width">
+                <label>Descripción / Servicios que ofrece</label>
+                <p id="modal-det-descripcion" class="detalle-box">-</p>
+            </div>
+        </div>
 
-        const navObjetivo = document.getElementById('nav-' + vista);
-        if (navObjetivo) {
-            navObjetivo.classList.add('active');
-        }
+        <div class="modal-actions-footer" id="modal-det-acciones"></div>
+    </div>
+</div>
 
-        if (typeof funcionOriginalCambiarVista === 'function') {
-            try {
-                funcionOriginalCambiarVista(vista);
-            } catch (e) {
-                // Silenciar si admin.js no reconoce la nueva vista de forma nativa
-            }
-        }
-    };
-
-</script>
+<script th:src="@{/js/admin.js(v=6)}"></script>
 </body>
 </html>

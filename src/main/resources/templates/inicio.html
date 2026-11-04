@@ -3,84 +3,1045 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TurisMap - Descubre la Ruta de las Flores</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>TurisMap - La Guía Definitiva de la Ruta de las Flores</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/inicio.css}">
+    <style>
+        /* Estilos complementarios para el formulario de solicitud básica */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: #131B2E;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            max-width: 540px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 32px 28px;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .btn-modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            color: #94A3B8;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-badge {
+            display: inline-block;
+            background: rgba(0, 209, 102, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(0, 209, 102, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .form-section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #CBD5E1;
+        }
+
+        .form-group input,
+        .form-group select {
+            background: #0B0F19;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: #FFFFFF;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select { cursor: pointer; }
+        .form-group input:focus,
+        .form-group select:focus { border-color: var(--primary); }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .error-msg {
+            color: #FF5A78;
+            font-size: 11px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .form-group.has-error input,
+        .form-group.has-error select {
+            border-color: #FF385C !important;
+            background: rgba(255, 56, 92, 0.05) !important;
+        }
+
+        .form-group.has-error .error-msg { display: block; }
+
+        .input-phone-wrapper {
+            display: flex;
+            align-items: center;
+            background: #0B0F19;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .input-phone-wrapper:focus-within { border-color: var(--primary); }
+        .form-group.has-error .input-phone-wrapper { border-color: #FF385C !important; }
+
+        .phone-prefix {
+            padding: 11px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #94A3B8;
+            background: rgba(255, 255, 255, 0.03);
+            border-right: 1px solid var(--border);
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .input-phone-wrapper input {
+            border: none !important;
+            background: transparent !important;
+            width: 100%;
+            padding: 11px 14px;
+            outline: none;
+            color: #FFFFFF;
+            font-size: 13px;
+        }
+
+        .btn-submit-modal {
+            background: var(--primary);
+            color: #0B0F19;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .btn-submit-modal:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-submit-modal:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert-success-modal {
+            background: rgba(0, 209, 102, 0.15);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .modal-privacy {
+            font-size: 11px;
+            color: #64748B;
+            text-align: center;
+            line-height: 1.4;
+            margin-top: 2px;
+        }
+    </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo">🗺️ TurisMap</div>
+<!-- NAVBAR -->
+<header class="navbar-wrapper">
+    <nav class="navbar">
+        <a th:href="@{/}" class="logo">
+            <span class="logo-pin">📍</span>
+            <div class="logo-brand">
+                <span class="logo-title">Turis<span>Map</span></span>
+                <small class="logo-sub">RUTA DE LAS FLORES</small>
+            </div>
+        </a>
+
         <div class="nav-links">
-            <a href="#turistas">Para Turistas</a>
+            <a href="#destinos-slider" class="active">Inicio</a>
+            <a href="#destinos-slider">Destinos</a>
+            <a href="#experiencias">Experiencias</a>
+            <a href="#turistas">App Móvil</a>
             <a href="#negocios">Para Negocios</a>
+
+            <div class="nav-search">
+                <span>🔍</span>
+                <input type="text" placeholder="Buscar destino o actividad...">
+            </div>
+
+            <button type="button" id="theme-toggle" class="theme-switch" aria-label="Cambiar tema">
+                <span class="switch-track">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                    <span class="switch-thumb"></span>
+                </span>
+            </button>
+
             <a th:href="@{/login}" class="btn-login">Iniciar Sesión</a>
         </div>
     </nav>
+</header>
 
-    <section class="hero" id="turistas">
+<!-- SECCIÓN 1: HERO SLIDER DE DESTINOS -->
+<section class="destinos-slider" id="destinos-slider">
+    <div class="slider-backdrop" id="slider-backdrop"></div>
+    <div class="slider-overlay"></div>
+
+    <div class="slider-content">
+        <div class="slider-badge" id="slider-dept">
+            <span class="badge-dot-green"></span>
+            <span id="slider-dept-text">AHUACHAPÁN, EL SALVADOR</span>
+        </div>
+
+        <h1 class="slider-title" id="slider-title">CONCEPCIÓN DE ATACO</h1>
+
+        <p class="slider-desc" id="slider-desc">
+            Famoso por sus coloridos murales, calles empedradas, clima fresco y arraigada tradición cafetalera de altura.
+        </p>
+
+        <div class="slider-actions">
+            <a href="#turistas" class="btn-explorar" id="slider-btn">
+                Explorar Destino <span class="arrow-icon">➔</span>
+            </a>
+
+            <div class="slider-meta-pills">
+                <span class="meta-pill" id="slider-clima">⛅ 18°C Fresco</span>
+                <span class="meta-divider">|</span>
+                <span class="meta-pill" id="slider-altitud">Altitud: 1,260 msnm</span>
+            </div>
+        </div>
+
+        <div class="slider-footer">
+            <div class="slider-nav">
+                <div class="slider-counter">
+                    <span class="current-num" id="current-num">01</span>
+                    <span class="num-divider">/</span>
+                    <span class="total-num">05</span>
+                </div>
+
+                <div class="slider-progress-track">
+                    <div class="slider-progress-bar" id="slider-progress"></div>
+                </div>
+
+                <div class="slider-arrows">
+                    <button type="button" class="btn-slider-arrow" id="btn-prev" aria-label="Destino anterior">‹</button>
+                    <button type="button" class="btn-slider-arrow" id="btn-next" aria-label="Siguiente destino">›</button>
+                </div>
+            </div>
+
+            <div class="slider-thumbnails-wrapper">
+                <div class="thumbnails-header">
+                    <span class="thumbnails-title">PRÓXIMOS DESTINOS EN LA RUTA</span>
+                    <span class="thumbnails-hint">HAZ CLIC PARA VIAJAR</span>
+                </div>
+                <div class="thumbnails-grid" id="thumbnails-grid"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECCIÓN 2: APP MÓVIL (MOCKUP) -->
+<section class="hero" id="turistas">
+    <div class="hero-container">
         <div class="hero-text">
-            <h1>Tu guía definitiva para la Ruta de las Flores</h1>
-            <p>Descubre cascadas ocultas, los mejores cafés y hoteles boutique. Todo El Salvador en la palma de tu mano con TurisMap.</p>
-            <div class="download-buttons">
-                <a href="#" class="btn-download">
-                    <span>📱</span> Descargar Android
+            <div class="badge-hero">
+                <span class="badge-dot"></span>
+                Tu compañera de viaje en El Salvador
+            </div>
+            <h2>Tu guía definitiva para la <span>Ruta de las Flores</span></h2>
+            <p>Descubre cascadas ocultas, los mejores cafés y hoteles boutique. Todo El Salvador en la palma de tu mano con la app móvil de TurisMap.</p>
+
+            <div class="download-group">
+                <a href="#" class="btn-app-store">
+                    <span class="app-icon">🤖</span>
+                    <div class="app-meta">
+                        <small>Disponible en</small>
+                        <strong>Google Play</strong>
+                    </div>
                 </a>
-                <a href="#" class="btn-download">
-                    <span>🍎</span> Descargar iOS
+                <a href="#" class="btn-app-store apple">
+                    <span class="app-icon">🍏</span>
+                    <div class="app-meta">
+                        <small>Descárgalo en</small>
+                        <strong>App Store</strong>
+                    </div>
                 </a>
             </div>
-        </div>
-        <div class="hero-image">
-            [ Aquí irá una foto genial de la App en un celular ]
-        </div>
-    </section>
 
-    <section class="business-section" id="negocios">
-        <h2>¿Tienes un negocio en la Ruta?</h2>
-        <p>Impulsa tus ventas llegando a miles de turistas que usan TurisMap a diario. Elige el plan ideal para ti.</p>
-        
-        <div class="plans-container">
-            <div class="plan-card">
-                <div class="plan-title">Presencia Básica</div>
-                <div class="plan-price">$5 <span>/mes</span></div>
-                <ul class="plan-features">
-                    <li>✔️ Aparición en el mapa</li>
-                    <li>✔️ Nombre y dirección</li>
-                    <li>✔️ 1 Fotografía</li>
-                    <li>❌ Panel de control propio</li>
-                </ul>
-                <a href="#" class="btn-plan">Comenzar Gratis</a>
-            </div>
-
-            <div class="plan-card premium">
-                <div class="plan-title">Socio </div>
-                <div class="plan-price">$15 <span>/mes</span></div>
-                <ul class="plan-features">
-                    <li>✔️ Posicionamiento destacado</li>
-                    <li>✔️ Menú y enlaces directos</li>
-                    <li>✔️ Acceso al Panel de Cliente</li>
-                </ul>
-                <a href="#" class="btn-plan">Impulsar mi Negocio</a>
-            </div>
-
-            <div class="plan-card premium">
-                <div class="plan-title">Socio Premium</div>
-                <div class="plan-price">$25 <span>/mes</span></div>
-                <ul class="plan-features">
-                    <li>✔️ Posicionamiento destacado</li>
-                    <li>✔ Galería de fotos ilimitada</li>
-                    <li>✔️ Menú y enlaces directos</li>
-                    <li>✔️ Acceso al Panel de Cliente</li>
-                </ul>
-                <a href="#" class="btn-plan">Impulsar mi Negocio</a>
+            <div class="hero-trust">
+                <div class="avatars">
+                    <span>☕</span>
+                    <span>🏨</span>
+                    <span>🏺</span>
+                </div>
+                <p>Más de <strong>1,200 turistas</strong> descubriendo locales cada semana</p>
             </div>
         </div>
-    </section>
 
-    <footer>
+        <div class="hero-visual">
+            <div class="floating-pill pill-top">
+                <div class="pill-icon">☕</div>
+                <div class="pill-info">
+                    <strong>Café Entre Flores</strong>
+                    <span>⭐ 4.9 · Apaneca (Abierto)</span>
+                </div>
+            </div>
+
+            <div class="phone-mockup">
+                <div class="phone-camera"></div>
+                <div class="phone-screen">
+                    <div class="screen-header">
+                        <span>9:41</span>
+                        <span>📶 5G</span>
+                    </div>
+                    <div class="screen-body">
+                        <div class="screen-search-bar">🔍 Buscar cafés, miradores...</div>
+                        <div class="screen-card-preview">
+                            <div class="preview-img"></div>
+                            <div class="preview-content">
+                                <span class="preview-tag">Favorito</span>
+                                <h4>Mirador de la Cruz</h4>
+                                <p>Concepción de Ataco</p>
+                                <div class="preview-btn">🚗 Iniciar ruta en mapa</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="floating-pill pill-bottom">
+                <div class="pill-icon">🚗</div>
+                <div class="pill-info">
+                    <strong>Llegada en 14 min</strong>
+                    <span>Ruta fluida por CA-8</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECCIÓN 3: STATS -->
+<section class="stats-bar">
+    <div class="stats-container">
+        <div class="stat-item">
+            <h3>5</h3>
+            <p>Municipios conectados</p>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <h3>+60</h3>
+            <p>Comercios verificados</p>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <h3>100%</h3>
+            <p>Navegación interactiva</p>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <h3>⭐ 4.9</h3>
+            <p>Satisfacción de turistas</p>
+        </div>
+    </div>
+</section>
+
+<!-- SECCIÓN 4: EXPERIENCIAS -->
+<section class="features-section" id="experiencias">
+    <div class="section-heading">
+        <span class="sub-label">DISEÑADA PARA VIAJEROS</span>
+        <h2>Todo lo que necesitas en carretera</h2>
+        <p>Olvídate de perderte entre calles empedradas o llegar a negocios cerrados.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🧭</div>
+            <h3>Mapa Interactivo en Vivo</h3>
+            <p>Calcula distancias y tiempos de llegada a cada rincón turístico sin salir de la plataforma.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">☕</div>
+            <h3>Guía Comercial Curada</h3>
+            <p>Menús, horarios actualizados, fotografías y contacto directo con cafeterías y posadas.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🌿</div>
+            <h3>Joyas Ocultas de la Ruta</h3>
+            <p>Accede a miradores, cascadas y senderos recomendados por las comunidades locales.</p>
+        </div>
+    </div>
+</section>
+
+<!-- SECCIÓN 5: PLANES DE NEGOCIO -->
+<section class="business-section" id="negocios">
+    <div class="section-heading">
+        <span class="sub-label">IMPULSA TU NEGOCIO</span>
+        <h2>¿Tienes un establecimiento en la Ruta?</h2>
+        <p>Llega directamente a turistas que ya están transitando cerca de tu puerta buscando dónde comer o descansar.</p>
+    </div>
+
+    <div th:if="${param.error != null and param.error[0] == 'requiere_plan'}" class="alerta-requiere-plan">
+        <span class="alerta-icono">🔒</span>
+        <div class="alerta-contenido">
+            <strong>Para ingresar tienes que tener plan</strong>
+            <p>Tu cuenta actual es de viajero o plan básico. Para acceder al panel de gestión comercial, suscríbete a uno de los planes de Socio a continuación.</p>
+        </div>
+    </div>
+
+    <div class="plans-container">
+        <!-- PLAN BÁSICO: Abre el modal sin pedir login -->
+        <div class="plan-card">
+            <div class="plan-title">Presencia Básica</div>
+            <div class="plan-subtitle">Para pequeños puestos o emprendimientos locales.</div>
+            <div class="plan-price">$5 <span>/mes</span></div>
+            <ul class="plan-features">
+                <li><span class="check">✓</span> Pin visible en el mapa</li>
+                <li><span class="check">✓</span> Nombre, teléfono y dirección</li>
+                <li><span class="check">✓</span> 1 Fotografía de portada</li>
+                <li class="disabled"><span class="cross">✕</span> Panel de control autogestionable</li>
+                <li class="disabled"><span class="cross">✕</span> Posicionamiento prioritario</li>
+            </ul>
+            <a href="javascript:void(0)" class="btn-plan secondary" id="btn-elegir-basico">Elegir Básico</a>
+        </div>
+
+        <!-- PLAN SOCIO: Redirige a crear cuenta comercial -->
+        <div class="plan-card popular">
+            <div class="popular-tag">MÁS POPULAR</div>
+            <div class="plan-title">Socio TurisMap</div>
+            <div class="plan-subtitle">Ideal para cafeterías, hostales y restaurantes consolidados.</div>
+            <div class="plan-price">$15 <span>/mes</span></div>
+            <ul class="plan-features">
+                <li><span class="check">✓</span> <strong>Posicionamiento destacado en búsquedas</strong></li>
+                <li><span class="check">✓</span> Enlaces directos a WhatsApp y redes</li>
+                <li><span class="check">✓</span> Galería de hasta 8 fotografías</li>
+                <li><span class="check">✓</span> Acceso total al Panel de Cliente</li>
+                <li><span class="check">✓</span> Estadísticas mensuales de visitas</li>
+            </ul>
+            <a href="javascript:void(0)" class="btn-plan primary btn-plan-comercial" data-plan="Socio TurisMap">Impulsar mi Negocio</a>
+        </div>
+
+        <!-- PLAN PREMIUM: Redirige a crear cuenta comercial -->
+        <div class="plan-card">
+            <div class="plan-title">Socio Premium</div>
+            <div class="plan-subtitle">Para hoteles boutique, fincas turísticas y turoperadores.</div>
+            <div class="plan-price">$25 <span>/mes</span></div>
+            <ul class="plan-features">
+                <li><span class="check">✓</span> Insignia <em>"Favorito de la Ruta"</em></li>
+                <li><span class="check">✓</span> Banner promocional rotativo en la Guía</li>
+                <li><span class="check">✓</span> Galería ilimitada y enlace a catálogo/menú</li>
+                <li><span class="check">✓</span> Acceso total al Panel de Cliente</li>
+                <li><span class="check">✓</span> Soporte prioritario vía WhatsApp</li>
+            </ul>
+            <a href="javascript:void(0)" class="btn-plan secondary btn-plan-comercial" data-plan="Socio Premium">Impulsar mi Negocio</a>
+        </div>
+    </div>
+
+    <div class="comparison-toggle-wrapper">
+        <button type="button" class="btn-toggle-comparison" id="btn-toggle-comparison">
+            <span>Comparar todos los beneficios en detalle</span>
+            <span class="toggle-chevron" id="comparison-chevron">▼</span>
+        </button>
+    </div>
+
+    <div class="comparison-table-wrapper" id="comparison-table-wrapper">
+        <div class="table-responsive">
+            <table class="comparison-table">
+                <thead>
+                <tr>
+                    <th class="th-feature">Características y Beneficios</th>
+                    <th>Presencia Básica<br><small>$5 / mes</small></th>
+                    <th class="th-popular">Socio TurisMap<br><small>$15 / mes</small></th>
+                    <th>Socio Premium<br><small>$25 / mes</small></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="feature-name">Presencia y pin en el mapa interactivo</td>
+                    <td><span class="check">✓</span> Pin estándar</td>
+                    <td><span class="check">✓</span> Pin destacado verde</td>
+                    <td><span class="check">✓</span> Pin VIP con corona</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Galería fotográfica del local</td>
+                    <td>1 fotografía</td>
+                    <td>Hasta 8 fotografías</td>
+                    <td>Ilimitadas (HD)</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Canales de contacto directo</td>
+                    <td>Teléfono / Dirección</td>
+                    <td>WhatsApp + Redes Sociales</td>
+                    <td>WhatsApp, Redes y Menú / Catálogo</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Panel de control autogestionable</td>
+                    <td><span class="cross">✕</span></td>
+                    <td><span class="check">✓</span> Acceso 24/7</td>
+                    <td><span class="check">✓</span> Acceso total multisesión</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Estadísticas de turistas (visitas y clics)</td>
+                    <td><span class="cross">✕</span></td>
+                    <td><span class="check">✓</span> Reporte mensual</td>
+                    <td><span class="check">✓</span> Analítica en tiempo real</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Posicionamiento en motor de búsqueda</td>
+                    <td>Estándar</td>
+                    <td>Prioritario en su municipio</td>
+                    <td>Primeros resultados de la Ruta</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Insignia "Recomendado de la Ruta"</td>
+                    <td><span class="cross">✕</span></td>
+                    <td><span class="cross">✕</span></td>
+                    <td><span class="check">✓</span> Distintivo oficial</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Banner promocional rotativo en la web</td>
+                    <td><span class="cross">✕</span></td>
+                    <td><span class="cross">✕</span></td>
+                    <td><span class="check">✓</span> En portada y guía</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Soporte y asesoría técnica</td>
+                    <td>Correo electrónico</td>
+                    <td>WhatsApp estándar</td>
+                    <td>WhatsApp VIP prioritario</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- SECCIÓN 6: FOOTER -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <div class="logo">📍 Turis<span>Map</span></div>
+            <p>La plataforma turística digital de la Ruta de las Flores, El Salvador.</p>
+        </div>
+        <div class="footer-links">
+            <h4>Navegación</h4>
+            <a href="#destinos-slider">Destinos</a>
+            <a href="#turistas">App Móvil</a>
+            <a href="#experiencias">Experiencias</a>
+            <a href="#negocios">Negocios</a>
+        </div>
+        <div class="footer-links">
+            <h4>Comercios</h4>
+            <a th:href="@{/login}">Portal de Administración</a>
+            <a href="#">Términos del Servicio</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
         <p>© 2026 TurisMap El Salvador. Todos los derechos reservados.</p>
-    </footer>
+    </div>
+</footer>
 
+<!-- MODAL DE SOLICITUD PLAN BÁSICO -->
+<div class="modal-overlay" id="modal-basico">
+    <div class="modal-card">
+        <button type="button" class="btn-modal-close" id="btn-close-basico" aria-label="Cerrar modal">✕</button>
+
+        <div class="modal-header">
+            <span class="modal-badge">SOLICITUD DE REGISTRO</span>
+            <h3 class="modal-title">Presencia Básica ($5/mes)</h3>
+            <p class="modal-subtitle">Envía la información de tu establecimiento. El equipo administrador validará tus datos para habilitar el pin en el mapa.</p>
+        </div>
+
+        <form class="modal-form" id="form-solicitud-basico" novalidate>
+            <div class="form-section-title">1. Información del Propietario o Encargado</div>
+
+            <div class="form-row">
+                <div class="form-group" id="grp-basico-nombre">
+                    <label for="basico-nombre">Nombre Completo *</label>
+                    <input type="text" id="basico-nombre" placeholder="Ej. Diego Alexander Zepeda" required>
+                    <small class="error-msg">Ingresa tu nombre y apellido.</small>
+                </div>
+                <div class="form-group" id="grp-basico-email">
+                    <label for="basico-email">Correo Electrónico *</label>
+                    <input type="email" id="basico-email" placeholder="ejemplo@correo.com" required>
+                    <small class="error-msg">Ingresa un correo válido.</small>
+                </div>
+            </div>
+
+            <div class="form-group" id="grp-basico-tel">
+                <label for="basico-tel">WhatsApp de Contacto *</label>
+                <div class="input-phone-wrapper">
+                    <span class="phone-prefix">🇸🇻 +503</span>
+                    <input type="tel" id="basico-tel" placeholder="7123-4567" maxlength="9" required>
+                </div>
+                <small class="error-msg">Ingresa un número salvadoreño válido (8 dígitos).</small>
+            </div>
+
+            <div class="form-section-title">2. Información del Establecimiento</div>
+
+            <div class="form-group" id="grp-basico-negocio">
+                <label for="basico-negocio">Nombre Comercial del Negocio *</label>
+                <input type="text" id="basico-negocio" placeholder="Ej. Cafetería y Mirador La Cabaña" required>
+                <small class="error-msg">Ingresa el nombre del local.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" id="grp-basico-muni">
+                    <label for="basico-municipio">Municipio en la Ruta *</label>
+                    <select id="basico-municipio" required>
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <option value="Concepción de Ataco">Concepción de Ataco</option>
+                        <option value="Apaneca">Apaneca</option>
+                        <option value="Juayúa">Juayúa</option>
+                        <option value="Salcoatitán">Salcoatitán</option>
+                        <option value="Nahuizalco">Nahuizalco</option>
+                    </select>
+                    <small class="error-msg">Selecciona municipio.</small>
+                </div>
+                <div class="form-group" id="grp-basico-cat">
+                    <label for="basico-categoria">Categoría del Local *</label>
+                    <select id="basico-categoria" required>
+                        <option value="" disabled selected>Seleccionar...</option>
+                        <option value="Cafetería / Bar">Cafetería / Bar</option>
+                        <option value="Restaurante / Comida Típica">Restaurante / Comida Típica</option>
+                        <option value="Hostal / Hotel / Cabañas">Hostal / Hotel / Cabañas</option>
+                        <option value="Artesanías / Souvenirs">Artesanías / Souvenirs</option>
+                        <option value="Tours / Aventura">Tours / Aventura</option>
+                    </select>
+                    <small class="error-msg">Selecciona categoría.</small>
+                </div>
+            </div>
+
+            <div class="form-group" id="grp-basico-dir">
+                <label for="basico-direccion">Dirección exacta o punto de referencia *</label>
+                <input type="text" id="basico-direccion" placeholder="Ej. 2da Calle Poniente, a 50m del Parque Central" required>
+                <small class="error-msg">Ingresa una referencia o dirección física.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="basico-desc">Breve descripción de lo que ofreces (opcional)</label>
+                <input type="text" id="basico-desc" placeholder="Ej. Café de altura, postres artesanales y desayunos típicos">
+            </div>
+
+            <button type="submit" class="btn-submit-modal" id="btn-submit-basico">
+                <span>Enviar Solicitud a Revisión</span>
+                <span>➔</span>
+            </button>
+
+            <div class="alert-success-modal" id="alert-success-basico" style="display: none;">
+                ✓ ¡Solicitud enviada exitosamente! Un administrador la revisará a la brevedad.
+            </div>
+
+            <p class="modal-privacy">🔒 Tus datos se enviarán de forma segura al equipo administrativo de TurisMap.</p>
+        </form>
+    </div>
+</div>
+
+<!-- SCRIPTS COMPLETOS -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- 1. MODO OSCURO / CLARO ---
+        const toggleBtn = document.getElementById('theme-toggle');
+        const root = document.documentElement;
+        const body = document.body;
+
+        const temaGuardado = localStorage.getItem('turismap_theme');
+        const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const temaInicial = temaGuardado || (prefiereOscuro ? 'dark' : 'light');
+
+        function setTema(tema) {
+            if (tema === 'dark') {
+                root.setAttribute('data-theme', 'dark');
+                body.classList.add('dark-theme');
+                toggleBtn.classList.add('active');
+                localStorage.setItem('turismap_theme', 'dark');
+            } else {
+                root.removeAttribute('data-theme');
+                body.classList.remove('dark-theme');
+                toggleBtn.classList.remove('active');
+                localStorage.setItem('turismap_theme', 'light');
+            }
+        }
+        setTema(temaInicial);
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const esOscuro = body.classList.contains('dark-theme') || root.getAttribute('data-theme') === 'dark';
+            setTema(esOscuro ? 'light' : 'dark');
+        });
+
+        // --- 2. DESTINOS DEL SLIDER ---
+        const destinos = [
+            {
+                nombre: "CONCEPCIÓN DE ATACO",
+                departamento: "AHUACHAPÁN, EL SALVADOR",
+                descripcion: "Famoso por sus coloridos murales, calles empedradas, clima fresco y arraigada tradición cafetalera de altura.",
+                clima: "⛅ 18°C Fresco",
+                altitud: "Altitud: 1,260 msnm",
+                imagen: "https://images.trvl-media.com/place/6197615/08788c21-306e-48c2-b4cd-18683102e01f.jpg"
+            },
+            {
+                nombre: "APANECA",
+                departamento: "AHUACHAPÁN, EL SALVADOR",
+                descripcion: "La ciudad más alta de la zona, ideal para el ecoturismo, lagunas volcánicas, laberintos naturales y senderismo de montaña.",
+                clima: "⛅ 16°C Frío de Montaña",
+                altitud: "Altitud: 1,470 msnm",
+                imagen: "https://elsalvador.travel/system/wp-content/uploads/2024/06/apaneca-04.jpg"
+            },
+            {
+                nombre: "JUAYÚA",
+                departamento: "SONSONATE, EL SALVADOR",
+                descripcion: "Conocido por su popular feria gastronómica de fin de semana, senderos naturales y las místicas cascadas Los Chorros de la Calera.",
+                clima: "⛅ 19°C Agradable",
+                altitud: "Altitud: 1,025 msnm",
+                imagen: "https://guanacos.com/wp-content/uploads/2026/01/GUANACOS-JUAYUA-SONSONATE-8.jpg"
+            },
+            {
+                nombre: "SALCOATITÁN",
+                departamento: "SONSONATE, EL SALVADOR",
+                descripcion: "Rincón colonial reconocido por sus festivales gastronómicos, venta tradicional de yuca con chicharrón y acogedoras galerías de arte.",
+                clima: "⛅ 20°C Templado",
+                altitud: "Altitud: 1,045 msnm",
+                imagen: "https://elsalvador.travel/system/wp-content/uploads/2023/07/Salcoatitan03.jpg"
+            },
+            {
+                nombre: "NAHUIZALCO",
+                departamento: "SONSONATE, EL SALVADOR",
+                descripcion: "Pueblo de profundas raíces náhuat con un vibrante mercado nocturno iluminado por velas y tradición en artesanías de mimbre y tule.",
+                clima: "⛅ 22°C Cálido Fresco",
+                altitud: "Altitud: 540 msnm",
+                imagen: "https://i.pinimg.com/1200x/d1/57/45/d1574555fc1ce2f5dabc18e0c6f8b636.jpg"
+            }
+        ];
+
+        let indiceActual = 0;
+        const total = destinos.length;
+
+        const backdrop = document.getElementById('slider-backdrop');
+        const deptText = document.getElementById('slider-dept-text');
+        const titleText = document.getElementById('slider-title');
+        const descText = document.getElementById('slider-desc');
+        const climaText = document.getElementById('slider-clima');
+        const altitudText = document.getElementById('slider-altitud');
+        const currentNum = document.getElementById('current-num');
+        const progressBar = document.getElementById('slider-progress');
+        const thumbnailsContainer = document.getElementById('thumbnails-grid');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        function actualizarSlider(indice) {
+            indiceActual = indice;
+            const d = destinos[indiceActual];
+
+            backdrop.style.opacity = '0.25';
+            setTimeout(() => {
+                backdrop.style.backgroundImage = `url('${d.imagen}')`;
+                backdrop.style.opacity = '1';
+            }, 120);
+
+            deptText.textContent = d.departamento;
+            titleText.textContent = d.nombre;
+            descText.textContent = d.descripcion;
+            climaText.textContent = d.clima;
+            altitudText.textContent = d.altitud;
+
+            currentNum.textContent = String(indiceActual + 1).padStart(2, '0');
+            const porcentaje = ((indiceActual + 1) / total) * 100;
+            progressBar.style.width = `${porcentaje}%`;
+
+            renderizarMiniaturas();
+        }
+
+        function renderizarMiniaturas() {
+            thumbnailsContainer.innerHTML = '';
+            destinos.forEach((item, idx) => {
+                if (idx === indiceActual) return;
+
+                const card = document.createElement('div');
+                card.className = 'thumb-card';
+                card.style.backgroundImage = `url('${item.imagen}')`;
+                card.innerHTML = `
+                    <div class="thumb-card-overlay">
+                        <span class="thumb-tag">${item.departamento.split(',')[0]}</span>
+                        <h4 class="thumb-title">${item.nombre}</h4>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    actualizarSlider(idx);
+                });
+                thumbnailsContainer.appendChild(card);
+            });
+        }
+
+        btnPrev.addEventListener('click', () => {
+            const nuevoIndice = (indiceActual - 1 + total) % total;
+            actualizarSlider(nuevoIndice);
+        });
+
+        btnNext.addEventListener('click', () => {
+            const nuevoIndice = (indiceActual + 1) % total;
+            actualizarSlider(nuevoIndice);
+        });
+
+        actualizarSlider(0);
+
+        // --- 3. COMPARATIVA ---
+        const btnToggleComparison = document.getElementById('btn-toggle-comparison');
+        const comparisonWrapper = document.getElementById('comparison-table-wrapper');
+        const chevron = document.getElementById('comparison-chevron');
+
+        btnToggleComparison.addEventListener('click', () => {
+            const isExpanded = comparisonWrapper.classList.toggle('expanded');
+            chevron.classList.toggle('open', isExpanded);
+            btnToggleComparison.querySelector('span:first-child').textContent = isExpanded
+                ? 'Ocultar comparativa detallada'
+                : 'Comparar todos los beneficios en detalle';
+        });
+
+        // --- 4. CONTROL DE PLANES Y MODAL ---
+        const modalBasico = document.getElementById('modal-basico');
+        const btnCloseBasico = document.getElementById('btn-close-basico');
+        const btnElegirBasico = document.getElementById('btn-elegir-basico');
+        const formBasico = document.getElementById('form-solicitud-basico');
+        const telInput = document.getElementById('basico-tel');
+
+        // Formato para teléfono salvadoreño (XXXX-XXXX)
+        if (telInput) {
+            telInput.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length > 8) val = val.substring(0, 8);
+                if (val.length > 4) {
+                    e.target.value = val.substring(0, 4) + '-' + val.substring(4);
+                } else {
+                    e.target.value = val;
+                }
+            });
+        }
+
+        // Click en PLAN BÁSICO -> Abre Modal directamente sin pedir login
+        if (btnElegirBasico) {
+            btnElegirBasico.addEventListener('click', (e) => {
+                e.preventDefault();
+                formBasico.reset();
+                document.querySelectorAll('.form-group').forEach(g => g.classList.remove('has-error'));
+                document.getElementById('alert-success-basico').style.display = 'none';
+                modalBasico.classList.add('active');
+            });
+        }
+
+        // Click en PLANES COMERCIALES (Socio / Premium) -> Redirige a crear cuenta
+        document.querySelectorAll('.btn-plan-comercial').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const planName = btn.getAttribute('data-plan');
+                window.location.href = `/login?plan=${encodeURIComponent(planName)}&tab=register`;
+            });
+        });
+
+        // Cerrar Modal Básico
+        if (btnCloseBasico) {
+            btnCloseBasico.addEventListener('click', () => modalBasico.classList.remove('active'));
+        }
+        if (modalBasico) {
+            modalBasico.addEventListener('click', (e) => {
+                if (e.target === modalBasico) modalBasico.classList.remove('active');
+            });
+        }
+
+        // Envío de Solicitud de Plan Básico al Backend (/api/solicitudes/basico)
+        if (formBasico) {
+            formBasico.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let esValido = true;
+
+                const nombre = document.getElementById('basico-nombre').value.trim();
+                const email = document.getElementById('basico-email').value.trim();
+                const tel = document.getElementById('basico-tel').value.trim();
+                const negocio = document.getElementById('basico-negocio').value.trim();
+                const muni = document.getElementById('basico-municipio').value;
+                const cat = document.getElementById('basico-categoria').value;
+                const dir = document.getElementById('basico-direccion').value.trim();
+                const desc = document.getElementById('basico-desc').value.trim();
+
+                document.querySelectorAll('.form-group').forEach(g => g.classList.remove('has-error'));
+
+                if (nombre.length < 3) {
+                    document.getElementById('grp-basico-nombre').classList.add('has-error');
+                    esValido = false;
+                }
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    document.getElementById('grp-basico-email').classList.add('has-error');
+                    esValido = false;
+                }
+                const regexSV = /^[267][0-9]{3}-[0-9]{4}$/;
+                if (!regexSV.test(tel)) {
+                    document.getElementById('grp-basico-tel').classList.add('has-error');
+                    esValido = false;
+                }
+                if (negocio.length < 2) {
+                    document.getElementById('grp-basico-negocio').classList.add('has-error');
+                    esValido = false;
+                }
+                if (!muni) {
+                    document.getElementById('grp-basico-muni').classList.add('has-error');
+                    esValido = false;
+                }
+                if (!cat) {
+                    document.getElementById('grp-basico-cat').classList.add('has-error');
+                    esValido = false;
+                }
+                if (dir.length < 4) {
+                    document.getElementById('grp-basico-dir').classList.add('has-error');
+                    esValido = false;
+                }
+
+                if (!esValido) return;
+
+                const btnSubmit = document.getElementById('btn-submit-basico');
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span>Enviando información...</span>';
+
+                try {
+                    const res = await fetch('/api/solicitudes/registrar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombreCompleto: nombre,
+                            email: email,
+                            telefono: tel,
+                            nombreNegocio: negocio,
+                            municipio: muni,
+                            categoria: cat,
+                            direccion: dir,
+                            descripcion: desc,
+                            planId: 'presencia_basica',
+                            planNombre: 'Presencia Básica'
+                        })
+                    });
+
+                    if (!res.ok) throw new Error('Error al registrar solicitud');
+
+                    document.getElementById('alert-success-basico').style.display = 'block';
+                    setTimeout(() => {
+                        modalBasico.classList.remove('active');
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<span>Enviar Solicitud a Revisión</span> <span>➔</span>';
+                    }, 2200);
+
+                } catch (err) {
+                    alert('No se pudo enviar la solicitud. Intenta nuevamente.');
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<span>Enviar Solicitud a Revisión</span> <span>➔</span>';
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>
