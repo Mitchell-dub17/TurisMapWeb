@@ -761,9 +761,16 @@ body {
     max-width: 1150px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 26px;
     align-items: stretch;
+}
+
+.plans-status {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 28px;
 }
 
 .plan-card {
@@ -818,6 +825,9 @@ body {
     font-weight: 700;
     font-size: 14px;
     transition: background 0.2s;
+    font-family: inherit;
+    border: 0;
+    cursor: pointer;
 }
 
 .btn-plan.primary { background: var(--primary); color: #0B0F19; }

@@ -2,8 +2,13 @@ package com.turismap.admin.service;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.firebase.cloud.FirestoreClient;
+import com.turismap.admin.model.Coordenadas;
+import com.turismap.admin.model.OpcionSolicitud;
 import com.turismap.admin.model.PlanComercio;
+import com.turismap.admin.model.PlanSolicitud;
+import com.turismap.admin.model.SolicitudOpciones;
 import com.turismap.admin.model.SolicitudRegistroComercio;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -30,23 +36,205 @@ public class SolicitudService {
         return FirestoreClient.getFirestore();
     }
 
-    public CompletableFuture<String> guardarSolicitud(SolicitudRegistroComercio solicitud) {
+    public CompletableFuture<SolicitudOpciones> obtenerOpciones() {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String id = UUID.randomUUID().toString();
-                solicitud.setId(id);
-                solicitud.setEstado("PENDIENTE");
-
-                solicitud.setFechaRegistro(Instant.now().toString());
-
-                getFirestore().collection(COLECCION).document(id).set(solicitud).get();
-                log.info("Solicitud de registro de comercio registrada con ID: {}, Plan: {}", id, solicitud.getPlanNombre());
-                return id;
+                var firestore = getFirestore();
+                List<OpcionSolicitud> municipios = firestore.collection("lugares").get().get()
+                        .getDocuments().stream()
+                        .filter(doc -> doc.getString("nombre") != null && !doc.getString("nombre").isBlank())
+                        .map(doc -> new OpcionSolicitud(doc.getId(), doc.getString("nombre")))
+                        .sorted(Comparator.comparing(OpcionSolicitud::nombre, String.CASE_INSENSITIVE_ORDER))
+                        .toList();
+                List<OpcionSolicitud> categorias = firestore.collection("categorias_comercio").get().get()
+                        .getDocuments().stream()
+                        .filter(doc -> Boolean.TRUE.equals(doc.getBoolean("activo")))
+                        .map(doc -> new OpcionSolicitud(doc.getId(), etiquetaCatalogo(doc)))
+                        .sorted(Comparator.comparing(OpcionSolicitud::nombre, String.CASE_INSENSITIVE_ORDER))
+                        .toList();
+                List<PlanSolicitud> planes = cargarPlanesActivos(firestore);
+                return new SolicitudOpciones(municipios, categorias, planes);
             } catch (Exception e) {
-                log.error("Error al guardar la solicitud en Firestore", e);
-                throw new RuntimeException("Error al registrar solicitud: " + e.getMessage());
+                log.error("Error al cargar opciones de solicitudes desde Firestore", e);
+                throw new CompletionException(e);
             }
         });
+    }
+
+    public CompletableFuture<List<PlanSolicitud>> obtenerPlanesActivos() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return cargarPlanesActivos(getFirestore());
+            } catch (Exception e) {
+                log.error("Error al cargar los planes activos desde Firestore", e);
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    private List<PlanSolicitud> cargarPlanesActivos(Firestore firestore) throws Exception {
+        return firestore.collection("planes_comercio").get().get()
+                .getDocuments().stream()
+                .filter(documento -> Boolean.TRUE.equals(documento.getBoolean("activo")))
+                .map(this::mapearPlanSolicitud)
+                .sorted(Comparator.comparing(
+                                PlanSolicitud::orden,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(PlanSolicitud::nombre, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    private PlanSolicitud mapearPlanSolicitud(DocumentSnapshot documento) {
+        List<String> beneficios = new ArrayList<>();
+        Object beneficiosData = documento.get("beneficios");
+        if (beneficiosData instanceof List<?> valores) {
+            valores.stream()
+                    .filter(String.class::isInstance)
+                    .map(String.class::cast)
+                    .map(String::trim)
+                    .filter(valor -> !valor.isBlank())
+                    .forEach(beneficios::add);
+        }
+
+        Number orden = documento.get("orden") instanceof Number valor ? valor : null;
+        Number precio = documento.get("precio") instanceof Number valor ? valor : null;
+        String descripcion = documento.getString("descripcion");
+        return new PlanSolicitud(
+                documento.getId(),
+                etiquetaPlan(documento),
+                descripcion == null ? "" : descripcion,
+                beneficios,
+                precio == null ? null : precio.doubleValue(),
+                documento.getString("moneda"),
+                documento.getString("periodicidad"),
+                orden == null ? null : orden.intValue()
+        );
+    }
+
+    private String etiquetaCatalogo(DocumentSnapshot documento) {
+        String nombre = documento.getString("nombre");
+        if (nombre != null && !nombre.isBlank()) {
+            return nombre;
+        }
+        String descripcion = documento.getString("descripcion");
+        return descripcion == null || descripcion.isBlank() ? documento.getId() : descripcion;
+    }
+
+    private String etiquetaPlan(DocumentSnapshot documento) {
+        String nombre = documento.getString("nombre");
+        return nombre == null || nombre.isBlank() ? documento.getId() : nombre;
+    }
+
+    public CompletableFuture<String> guardarSolicitud(
+            SolicitudRegistroComercio solicitud,
+            String propietarioUid,
+            String email
+    ) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                validarSolicitud(solicitud, propietarioUid, email);
+                var firestore = getFirestore();
+                DocumentSnapshot plan = firestore.collection("planes_comercio")
+                        .document(solicitud.getPlanId()).get().get();
+                DocumentSnapshot categoria = firestore.collection("categorias_comercio")
+                        .document(solicitud.getCategoria()).get().get();
+                boolean municipioExiste = !firestore.collection("lugares")
+                        .whereEqualTo("nombre", solicitud.getMunicipio().trim())
+                        .get().get().isEmpty();
+
+                if (!plan.exists() || !Boolean.TRUE.equals(plan.getBoolean("activo"))) {
+                    throw new IllegalArgumentException("El plan seleccionado no existe o no está activo.");
+                }
+                if (!categoria.exists() || !Boolean.TRUE.equals(categoria.getBoolean("activo"))) {
+                    throw new IllegalArgumentException("La categoría seleccionada no existe o no está activa.");
+                }
+                if (!municipioExiste) {
+                    throw new IllegalArgumentException("Selecciona un municipio válido.");
+                }
+
+                String id = UUID.randomUUID().toString();
+                solicitud.setId(id);
+                solicitud.setPropietarioUid(propietarioUid);
+                solicitud.setEmail(email);
+                solicitud.setEstado("PENDIENTE");
+                solicitud.setFechaRegistro(Instant.now().toString());
+                solicitud.setPlanNombre(etiquetaPlan(plan));
+
+                Coordenadas coordenadas = solicitud.getCoordenadas();
+                Map<String, Object> coordenadasData = Map.of(
+                        "latitud", coordenadas.getLatitud(),
+                        "longitud", coordenadas.getLongitud()
+                );
+                Map<String, Object> datos = new LinkedHashMap<>();
+                datos.put("id", id);
+                datos.put("propietarioUid", propietarioUid);
+                datos.put("nombreCompleto", solicitud.getNombreCompleto().trim());
+                datos.put("email", email);
+                datos.put("municipio", solicitud.getMunicipio().trim());
+                datos.put("nombreNegocio", solicitud.getNombreNegocio().trim());
+                datos.put("categoria", solicitud.getCategoria().trim());
+                datos.put("descripcion", solicitud.getDescripcion().trim());
+                datos.put("direccion", solicitud.getDireccion().trim());
+                datos.put("telefono", solicitud.getTelefono().trim());
+                datos.put("sitioWeb", solicitud.getSitioWeb() == null ? "" : solicitud.getSitioWeb().trim());
+                datos.put("horario", solicitud.getHorario() == null ? "" : solicitud.getHorario().trim());
+                datos.put("planId", solicitud.getPlanId().trim());
+                datos.put("coordenadas", coordenadasData);
+                datos.put("estado", "PENDIENTE");
+                datos.put("fechaRegistro", solicitud.getFechaRegistro());
+
+                firestore.collection(COLECCION).document(id).set(datos).get();
+                log.info("Solicitud de comercio guardada con ID: {}, planId: {}", id, solicitud.getPlanId());
+                return id;
+            } catch (IllegalArgumentException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("Error al guardar la solicitud de comercio en Firestore", e);
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    private void validarSolicitud(
+            SolicitudRegistroComercio solicitud,
+            String propietarioUid,
+            String email
+    ) {
+        if (solicitud == null) {
+            throw new IllegalArgumentException("Los datos de la solicitud son obligatorios.");
+        }
+        validarLongitud(propietarioUid, 1, 128, "La sesión no tiene un UID válido.");
+        validarLongitud(email, 1, 254, "La sesión no tiene un correo válido.");
+        validarLongitud(solicitud.getNombreCompleto(), 1, 120, "El nombre completo debe tener entre 1 y 120 caracteres.");
+        validarLongitud(solicitud.getMunicipio(), 1, 100, "Selecciona un municipio válido.");
+        validarLongitud(solicitud.getNombreNegocio(), 1, 120, "El nombre del negocio debe tener entre 1 y 120 caracteres.");
+        validarLongitud(solicitud.getCategoria(), 1, 128, "Selecciona una categoría.");
+        validarLongitud(solicitud.getPlanId(), 1, 128, "Selecciona un plan.");
+        validarLongitud(solicitud.getDescripcion(), 1, 2000, "La descripción debe tener entre 1 y 2000 caracteres.");
+        validarLongitud(solicitud.getDireccion(), 1, 300, "La dirección debe tener entre 1 y 300 caracteres.");
+        validarLongitud(solicitud.getTelefono(), 1, 40, "El teléfono debe tener entre 1 y 40 caracteres.");
+        validarLongitud(solicitud.getSitioWeb(), 0, 2048, "El sitio web es demasiado largo.");
+        validarLongitud(solicitud.getHorario(), 0, 200, "El horario es demasiado largo.");
+
+        if (solicitud.getSitioWeb() != null && !solicitud.getSitioWeb().isBlank()
+                && !solicitud.getSitioWeb().trim().startsWith("https://")) {
+            throw new IllegalArgumentException("El sitio web debe comenzar con https://.");
+        }
+
+        Coordenadas coordenadas = solicitud.getCoordenadas();
+        if (coordenadas == null || coordenadas.getLatitud() == null || coordenadas.getLongitud() == null
+                || !Double.isFinite(coordenadas.getLatitud()) || !Double.isFinite(coordenadas.getLongitud())
+                || coordenadas.getLatitud() < -90 || coordenadas.getLatitud() > 90
+                || coordenadas.getLongitud() < -180 || coordenadas.getLongitud() > 180) {
+            throw new IllegalArgumentException("Las coordenadas no son válidas.");
+        }
+    }
+
+    private void validarLongitud(String valor, int minimo, int maximo, String mensaje) {
+        String normalizado = valor == null ? "" : valor.trim();
+        if (normalizado.length() < minimo || normalizado.length() > maximo) {
+            throw new IllegalArgumentException(mensaje);
+        }
     }
 
     public CompletableFuture<List<SolicitudRegistroComercio>> obtenerTodas() {

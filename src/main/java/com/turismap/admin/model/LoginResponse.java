@@ -14,5 +14,6 @@ public class LoginResponse {
     private String tipo;
     private String nombre;
     private String correo;
+    private String telefono;
     private String redirectUrl;
 }

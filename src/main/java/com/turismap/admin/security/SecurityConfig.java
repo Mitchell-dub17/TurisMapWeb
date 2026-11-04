@@ -69,12 +69,12 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
 
-                        // 5. Autenticación, registro público y solicitudes públicas
+                        // 5. Autenticación y registro de cuentas
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/solicitudes/basico").permitAll()
 
                         // 6. Consultas públicas de lugares y reseñas para la web y app
                         .requestMatchers(HttpMethod.GET, "/api/lugares/**", "/api/resenas/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes/planes").permitAll()
 
                         // 7. API Administrativa exclusiva
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

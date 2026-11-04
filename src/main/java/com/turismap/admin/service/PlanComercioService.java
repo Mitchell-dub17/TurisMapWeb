@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -19,6 +20,15 @@ public class PlanComercioService {
 
     public CompletableFuture<PlanComercio> crearPlan(String id, PlanComercio plan) {
         return firestoreRepository.create(COLLECTION, id, plan);
+    }
+
+    public CompletableFuture<Void> establecerPrecioPlan(String id, double precio) {
+        return firestoreRepository.update(COLLECTION, id, Map.of(
+                        "precio", precio,
+                        "moneda", "USD",
+                        "periodicidad", "MES"
+                ))
+                .thenApply(ignored -> null);
     }
 
     public CompletableFuture<PlanComercio> obtenerPlanPorId(String id) {

@@ -16,6 +16,9 @@ public class PlanComercio {
     private String nombre;
     private String descripcion;
     private List<String> beneficios;
+    private Double precio;
+    private String moneda;
+    private String periodicidad;
     private Integer orden;
     private Boolean activo;
 }

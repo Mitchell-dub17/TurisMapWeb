@@ -26,6 +26,7 @@ public class SolicitudRegistroComercio {
     private String descripcion;
     private String horario;
     private String sitioWeb;
+    private Coordenadas coordenadas;
 
     // Control de la Solicitud
     private String planId;        // ID del plan: "presencia_basica", "socio_turismap", "socio_premium"
