@@ -44,6 +44,42 @@
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        .app-handoff-card {
+            max-width: 460px;
+        }
+
+        .app-selected-plan {
+            color: #CBD5E1;
+            font-size: 14px;
+            margin: 0 0 14px;
+        }
+
+        .app-selected-plan strong {
+            color: #FFFFFF;
+        }
+
+        .app-download-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .app-download-link {
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .app-download-link[hidden] {
+            display: none !important;
+        }
+
+        .app-download-unavailable,
+        .download-unavailable {
+            color: #94A3B8;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
         .modal-overlay.active .modal-card {
             transform: translateY(0);
         }
@@ -132,7 +168,8 @@
         }
 
         .form-group input,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             background: #0B0F19;
             border: 1px solid var(--border);
             border-radius: 10px;
@@ -146,12 +183,42 @@
 
         .form-group select { cursor: pointer; }
         .form-group input:focus,
-        .form-group select:focus { border-color: var(--primary); }
+        .form-group select:focus,
+        .form-group textarea:focus { border-color: var(--primary); }
 
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
+        }
+
+        #solicitud-mapa {
+            height: 300px;
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #0B0F19;
+            z-index: 1;
+        }
+
+        .mapa-ayuda {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: -8px;
+        }
+
+        .mapa-titulo {
+            font-size: 12px;
+            font-weight: 700;
+            color: #CBD5E1;
+            margin-bottom: -8px;
+        }
+
+        .mapa-error {
+            color: #FF5A78;
+            font-size: 12px;
+            display: none;
         }
 
         .error-msg {
@@ -358,18 +425,24 @@
             <p>Descubre cascadas ocultas, los mejores cafés y hoteles boutique. Todo El Salvador en la palma de tu mano con la app móvil de TurisMap.</p>
 
             <div class="download-group">
-                <a href="#" class="btn-app-store">
+                <a th:if="${!#strings.isEmpty(androidDownloadUrl)}" th:href="${androidDownloadUrl}" class="btn-app-store"
+                   target="_blank" rel="noopener noreferrer">
                     <span class="app-icon">🤖</span>
                     <div class="app-meta">
                         <small>Disponible en</small>
                         <strong>Google Play</strong>
                     </div>
                 </a>
-                <a href="#" class="btn-app-store apple">
+                <a th:if="${!#strings.isEmpty(iosDownloadUrl)}" th:href="${iosDownloadUrl}" class="btn-app-store apple"
+                   target="_blank" rel="noopener noreferrer">
                     <span class="app-icon">🍏</span>
                     <div class="app-meta">
                         <small>Descárgalo en</small>
                         <strong>App Store</strong>
+                        <p th:if="${#strings.isEmpty(androidDownloadUrl) and #strings.isEmpty(iosDownloadUrl)}"
+                           class="download-unavailable">
+                            La descarga de la app estará disponible al publicar su versión de demostración.
+                        </p>
                     </div>
                 </a>
             </div>
@@ -483,141 +556,20 @@
     <div class="section-heading">
         <span class="sub-label">IMPULSA TU NEGOCIO</span>
         <h2>¿Tienes un establecimiento en la Ruta?</h2>
-        <p>Llega directamente a turistas que ya están transitando cerca de tu puerta buscando dónde comer o descansar.</p>
+        <p>Conoce los planes desde la web y completa la solicitud de registro de tu comercio desde la app TurisMap.</p>
     </div>
 
     <div th:if="${param.error != null and param.error[0] == 'requiere_plan'}" class="alerta-requiere-plan">
         <span class="alerta-icono">🔒</span>
         <div class="alerta-contenido">
-            <strong>Para ingresar tienes que tener plan</strong>
-            <p>Tu cuenta actual es de viajero o plan básico. Para acceder al panel de gestión comercial, suscríbete a uno de los planes de Socio a continuación.</p>
+            <strong>Solicita el registro de tu comercio desde la app TurisMap</strong>
+            <p>Elige un plan en esta sección y continúa el registro desde la aplicación móvil.</p>
         </div>
     </div>
 
-    <div class="plans-container">
-        <!-- PLAN BÁSICO: Abre el modal sin pedir login -->
-        <div class="plan-card">
-            <div class="plan-title">Presencia Básica</div>
-            <div class="plan-subtitle">Para pequeños puestos o emprendimientos locales.</div>
-            <div class="plan-price">$5 <span>/mes</span></div>
-            <ul class="plan-features">
-                <li><span class="check">✓</span> Pin visible en el mapa</li>
-                <li><span class="check">✓</span> Nombre, teléfono y dirección</li>
-                <li><span class="check">✓</span> 1 Fotografía de portada</li>
-                <li class="disabled"><span class="cross">✕</span> Panel de control autogestionable</li>
-                <li class="disabled"><span class="cross">✕</span> Posicionamiento prioritario</li>
-            </ul>
-            <a href="javascript:void(0)" class="btn-plan secondary" id="btn-elegir-basico">Elegir Básico</a>
-        </div>
-
-        <!-- PLAN SOCIO: Redirige a crear cuenta comercial -->
-        <div class="plan-card popular">
-            <div class="popular-tag">MÁS POPULAR</div>
-            <div class="plan-title">Socio TurisMap</div>
-            <div class="plan-subtitle">Ideal para cafeterías, hostales y restaurantes consolidados.</div>
-            <div class="plan-price">$15 <span>/mes</span></div>
-            <ul class="plan-features">
-                <li><span class="check">✓</span> <strong>Posicionamiento destacado en búsquedas</strong></li>
-                <li><span class="check">✓</span> Enlaces directos a WhatsApp y redes</li>
-                <li><span class="check">✓</span> Galería de hasta 8 fotografías</li>
-                <li><span class="check">✓</span> Acceso total al Panel de Cliente</li>
-                <li><span class="check">✓</span> Estadísticas mensuales de visitas</li>
-            </ul>
-            <a href="javascript:void(0)" class="btn-plan primary btn-plan-comercial" data-plan="Socio TurisMap">Impulsar mi Negocio</a>
-        </div>
-
-        <!-- PLAN PREMIUM: Redirige a crear cuenta comercial -->
-        <div class="plan-card">
-            <div class="plan-title">Socio Premium</div>
-            <div class="plan-subtitle">Para hoteles boutique, fincas turísticas y turoperadores.</div>
-            <div class="plan-price">$25 <span>/mes</span></div>
-            <ul class="plan-features">
-                <li><span class="check">✓</span> Insignia <em>"Favorito de la Ruta"</em></li>
-                <li><span class="check">✓</span> Banner promocional rotativo en la Guía</li>
-                <li><span class="check">✓</span> Galería ilimitada y enlace a catálogo/menú</li>
-                <li><span class="check">✓</span> Acceso total al Panel de Cliente</li>
-                <li><span class="check">✓</span> Soporte prioritario vía WhatsApp</li>
-            </ul>
-            <a href="javascript:void(0)" class="btn-plan secondary btn-plan-comercial" data-plan="Socio Premium">Impulsar mi Negocio</a>
-        </div>
-    </div>
-
-    <div class="comparison-toggle-wrapper">
-        <button type="button" class="btn-toggle-comparison" id="btn-toggle-comparison">
-            <span>Comparar todos los beneficios en detalle</span>
-            <span class="toggle-chevron" id="comparison-chevron">▼</span>
-        </button>
-    </div>
-
-    <div class="comparison-table-wrapper" id="comparison-table-wrapper">
-        <div class="table-responsive">
-            <table class="comparison-table">
-                <thead>
-                <tr>
-                    <th class="th-feature">Características y Beneficios</th>
-                    <th>Presencia Básica<br><small>$5 / mes</small></th>
-                    <th class="th-popular">Socio TurisMap<br><small>$15 / mes</small></th>
-                    <th>Socio Premium<br><small>$25 / mes</small></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td class="feature-name">Presencia y pin en el mapa interactivo</td>
-                    <td><span class="check">✓</span> Pin estándar</td>
-                    <td><span class="check">✓</span> Pin destacado verde</td>
-                    <td><span class="check">✓</span> Pin VIP con corona</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Galería fotográfica del local</td>
-                    <td>1 fotografía</td>
-                    <td>Hasta 8 fotografías</td>
-                    <td>Ilimitadas (HD)</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Canales de contacto directo</td>
-                    <td>Teléfono / Dirección</td>
-                    <td>WhatsApp + Redes Sociales</td>
-                    <td>WhatsApp, Redes y Menú / Catálogo</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Panel de control autogestionable</td>
-                    <td><span class="cross">✕</span></td>
-                    <td><span class="check">✓</span> Acceso 24/7</td>
-                    <td><span class="check">✓</span> Acceso total multisesión</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Estadísticas de turistas (visitas y clics)</td>
-                    <td><span class="cross">✕</span></td>
-                    <td><span class="check">✓</span> Reporte mensual</td>
-                    <td><span class="check">✓</span> Analítica en tiempo real</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Posicionamiento en motor de búsqueda</td>
-                    <td>Estándar</td>
-                    <td>Prioritario en su municipio</td>
-                    <td>Primeros resultados de la Ruta</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Insignia "Recomendado de la Ruta"</td>
-                    <td><span class="cross">✕</span></td>
-                    <td><span class="cross">✕</span></td>
-                    <td><span class="check">✓</span> Distintivo oficial</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Banner promocional rotativo en la web</td>
-                    <td><span class="cross">✕</span></td>
-                    <td><span class="cross">✕</span></td>
-                    <td><span class="check">✓</span> En portada y guía</td>
-                </tr>
-                <tr>
-                    <td class="feature-name">Soporte y asesoría técnica</td>
-                    <td>Correo electrónico</td>
-                    <td>WhatsApp estándar</td>
-                    <td>WhatsApp VIP prioritario</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="plans-container" id="plans-container" aria-live="polite"
+         th:attr="data-app-deep-link=${appDeepLinkUrl},data-android-download=${androidDownloadUrl},data-ios-download=${iosDownloadUrl}">
+        <p class="plans-status">Cargando planes disponibles...</p>
     </div>
 </section>
 
@@ -646,103 +598,36 @@
     </div>
 </footer>
 
-<!-- MODAL DE SOLICITUD PLAN BÁSICO -->
-<div class="modal-overlay" id="modal-basico">
-    <div class="modal-card">
-        <button type="button" class="btn-modal-close" id="btn-close-basico" aria-label="Cerrar modal">✕</button>
-
+<!-- DIÁLOGO PARA CONTINUAR LA SOLICITUD EN LA APP -->
+<div class="modal-overlay" id="app-handoff-modal" aria-hidden="true">
+    <section class="modal-card app-handoff-card" role="dialog" aria-modal="true"
+             aria-labelledby="app-handoff-title" aria-describedby="app-handoff-description">
+        <button type="button" class="btn-modal-close" id="close-app-handoff"
+                aria-label="Cerrar">✕</button>
         <div class="modal-header">
-            <span class="modal-badge">SOLICITUD DE REGISTRO</span>
-            <h3 class="modal-title">Presencia Básica ($5/mes)</h3>
-            <p class="modal-subtitle">Envía la información de tu establecimiento. El equipo administrador validará tus datos para habilitar el pin en el mapa.</p>
+            <span class="modal-badge">SOLICITUD DESDE LA APP</span>
+            <h3 class="modal-title" id="app-handoff-title">Continúa en TurisMap</h3>
+            <p class="modal-subtitle" id="app-handoff-description">
+                La solicitud del plan se completa desde la aplicación móvil.
+            </p>
         </div>
-
-        <form class="modal-form" id="form-solicitud-basico" novalidate>
-            <div class="form-section-title">1. Información del Propietario o Encargado</div>
-
-            <div class="form-row">
-                <div class="form-group" id="grp-basico-nombre">
-                    <label for="basico-nombre">Nombre Completo *</label>
-                    <input type="text" id="basico-nombre" placeholder="Ej. Diego Alexander Zepeda" required>
-                    <small class="error-msg">Ingresa tu nombre y apellido.</small>
-                </div>
-                <div class="form-group" id="grp-basico-email">
-                    <label for="basico-email">Correo Electrónico *</label>
-                    <input type="email" id="basico-email" placeholder="ejemplo@correo.com" required>
-                    <small class="error-msg">Ingresa un correo válido.</small>
-                </div>
-            </div>
-
-            <div class="form-group" id="grp-basico-tel">
-                <label for="basico-tel">WhatsApp de Contacto *</label>
-                <div class="input-phone-wrapper">
-                    <span class="phone-prefix">🇸🇻 +503</span>
-                    <input type="tel" id="basico-tel" placeholder="7123-4567" maxlength="9" required>
-                </div>
-                <small class="error-msg">Ingresa un número salvadoreño válido (8 dígitos).</small>
-            </div>
-
-            <div class="form-section-title">2. Información del Establecimiento</div>
-
-            <div class="form-group" id="grp-basico-negocio">
-                <label for="basico-negocio">Nombre Comercial del Negocio *</label>
-                <input type="text" id="basico-negocio" placeholder="Ej. Cafetería y Mirador La Cabaña" required>
-                <small class="error-msg">Ingresa el nombre del local.</small>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group" id="grp-basico-muni">
-                    <label for="basico-municipio">Municipio en la Ruta *</label>
-                    <select id="basico-municipio" required>
-                        <option value="" disabled selected>Seleccionar...</option>
-                        <option value="Concepción de Ataco">Concepción de Ataco</option>
-                        <option value="Apaneca">Apaneca</option>
-                        <option value="Juayúa">Juayúa</option>
-                        <option value="Salcoatitán">Salcoatitán</option>
-                        <option value="Nahuizalco">Nahuizalco</option>
-                    </select>
-                    <small class="error-msg">Selecciona municipio.</small>
-                </div>
-                <div class="form-group" id="grp-basico-cat">
-                    <label for="basico-categoria">Categoría del Local *</label>
-                    <select id="basico-categoria" required>
-                        <option value="" disabled selected>Seleccionar...</option>
-                        <option value="Cafetería / Bar">Cafetería / Bar</option>
-                        <option value="Restaurante / Comida Típica">Restaurante / Comida Típica</option>
-                        <option value="Hostal / Hotel / Cabañas">Hostal / Hotel / Cabañas</option>
-                        <option value="Artesanías / Souvenirs">Artesanías / Souvenirs</option>
-                        <option value="Tours / Aventura">Tours / Aventura</option>
-                    </select>
-                    <small class="error-msg">Selecciona categoría.</small>
-                </div>
-            </div>
-
-            <div class="form-group" id="grp-basico-dir">
-                <label for="basico-direccion">Dirección exacta o punto de referencia *</label>
-                <input type="text" id="basico-direccion" placeholder="Ej. 2da Calle Poniente, a 50m del Parque Central" required>
-                <small class="error-msg">Ingresa una referencia o dirección física.</small>
-            </div>
-
-            <div class="form-group">
-                <label for="basico-desc">Breve descripción de lo que ofreces (opcional)</label>
-                <input type="text" id="basico-desc" placeholder="Ej. Café de altura, postres artesanales y desayunos típicos">
-            </div>
-
-            <button type="submit" class="btn-submit-modal" id="btn-submit-basico">
-                <span>Enviar Solicitud a Revisión</span>
-                <span>➔</span>
-            </button>
-
-            <div class="alert-success-modal" id="alert-success-basico" style="display: none;">
-                ✓ ¡Solicitud enviada exitosamente! Un administrador la revisará a la brevedad.
-            </div>
-
-            <p class="modal-privacy">🔒 Tus datos se enviarán de forma segura al equipo administrativo de TurisMap.</p>
-        </form>
-    </div>
+        <p class="app-selected-plan">Plan seleccionado: <strong id="app-handoff-plan"></strong></p>
+        <button type="button" class="btn-submit-modal" id="open-turismap-app">
+            Abrir TurisMap
+        </button>
+        <div class="app-download-options">
+            <a class="btn-submit-modal app-download-link" id="download-android-app"
+               target="_blank" rel="noopener noreferrer" hidden>Descargar para Android</a>
+            <a class="btn-submit-modal app-download-link" id="download-ios-app"
+               target="_blank" rel="noopener noreferrer" hidden>Descargar para iOS</a>
+        </div>
+        <p class="app-download-unavailable" id="app-download-unavailable">
+            La descarga aún no está configurada. Puedes cerrar esta ventana y seguir explorando los planes.
+        </p>
+    </section>
 </div>
 
-<!-- SCRIPTS COMPLETOS -->
+<!-- SCRIPTS -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- 1. MODO OSCURO / CLARO ---
@@ -890,157 +775,171 @@
 
         actualizarSlider(0);
 
-        // --- 3. COMPARATIVA ---
-        const btnToggleComparison = document.getElementById('btn-toggle-comparison');
-        const comparisonWrapper = document.getElementById('comparison-table-wrapper');
-        const chevron = document.getElementById('comparison-chevron');
+        // --- Los planes se muestran aquí; la solicitud se completa en la app móvil ---
+        const plansContainer = document.getElementById('plans-container');
+        const appHandoffModal = document.getElementById('app-handoff-modal');
+        const appHandoffPlan = document.getElementById('app-handoff-plan');
+        const appDeepLinkTemplate = plansContainer.dataset.appDeepLink || '';
+        const androidDownloadUrl = plansContainer.dataset.androidDownload || '';
+        const iosDownloadUrl = plansContainer.dataset.iosDownload || '';
+        let selectedPlanId = '';
+        let planesDisponibles = [];
 
-        btnToggleComparison.addEventListener('click', () => {
-            const isExpanded = comparisonWrapper.classList.toggle('expanded');
-            chevron.classList.toggle('open', isExpanded);
-            btnToggleComparison.querySelector('span:first-child').textContent = isExpanded
-                ? 'Ocultar comparativa detallada'
-                : 'Comparar todos los beneficios en detalle';
+        function configurarEnlaceDescarga(elementId, url) {
+            const link = document.getElementById(elementId);
+            if (url) {
+                link.href = url;
+                link.hidden = false;
+            }
+        }
+
+        configurarEnlaceDescarga('download-android-app', androidDownloadUrl);
+        configurarEnlaceDescarga('download-ios-app', iosDownloadUrl);
+        if (androidDownloadUrl || iosDownloadUrl) {
+            document.getElementById('app-download-unavailable').hidden = true;
+        } else {
+            document.querySelector('.app-download-options').hidden = true;
+        }
+
+        function cerrarDialogoApp() {
+            appHandoffModal.classList.remove('active');
+            appHandoffModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function abrirDialogoApp(plan) {
+            selectedPlanId = plan.id;
+            appHandoffPlan.textContent = plan.nombre;
+            appHandoffModal.classList.add('active');
+            appHandoffModal.setAttribute('aria-hidden', 'false');
+            document.getElementById('open-turismap-app').focus();
+        }
+
+        function construirEnlaceApp(planId) {
+            const encodedPlanId = encodeURIComponent(planId);
+            if (appDeepLinkTemplate.includes('{planId}')) {
+                return appDeepLinkTemplate.replaceAll('{planId}', encodedPlanId);
+            }
+            const separator = appDeepLinkTemplate.includes('?') ? '&' : '?';
+            return `${appDeepLinkTemplate}${separator}planId=${encodedPlanId}`;
+        }
+
+        function crearTarjetaPlan(plan) {
+            const card = document.createElement('article');
+            card.className = 'plan-card';
+
+            const title = document.createElement('h3');
+            title.className = 'plan-title';
+            title.textContent = plan.nombre;
+            card.appendChild(title);
+
+            if (plan.descripcion) {
+                const description = document.createElement('p');
+                description.className = 'plan-subtitle';
+                description.textContent = plan.descripcion;
+                card.appendChild(description);
+            }
+
+            if (Number.isFinite(plan.precio) && plan.moneda) {
+                const price = document.createElement('p');
+                price.className = 'plan-price';
+                price.textContent = new Intl.NumberFormat('es-SV', {
+                    style: 'currency',
+                    currency: plan.moneda
+                }).format(plan.precio);
+                if (plan.periodicidad) {
+                    const period = document.createElement('span');
+                    period.textContent = ` / ${plan.periodicidad.toLowerCase()}`;
+                    price.appendChild(period);
+                }
+                card.appendChild(price);
+            }
+
+            if (plan.beneficios.length) {
+                const benefits = document.createElement('ul');
+                benefits.className = 'plan-features';
+                plan.beneficios.forEach(beneficio => {
+                    const item = document.createElement('li');
+                    const check = document.createElement('span');
+                    check.className = 'check';
+                    check.textContent = '✓';
+                    item.append(check, document.createTextNode(beneficio));
+                    benefits.appendChild(item);
+                });
+                card.appendChild(benefits);
+            }
+
+            const choose = document.createElement('button');
+            choose.type = 'button';
+            choose.className = 'btn-plan primary btn-elegir-plan';
+            choose.dataset.planId = plan.id;
+            choose.textContent = 'Solicitar desde la app';
+            card.appendChild(choose);
+            return card;
+        }
+
+        async function cargarPlanesPublicos() {
+            try {
+                const response = await fetch('/api/solicitudes/planes');
+                if (!response.ok) {
+                    throw new Error(`No se pudieron cargar los planes (${response.status}).`);
+                }
+                planesDisponibles = await response.json();
+                plansContainer.replaceChildren();
+
+                if (!Array.isArray(planesDisponibles) || planesDisponibles.length === 0) {
+                    const message = document.createElement('p');
+                    message.className = 'plans-status';
+                    message.textContent = 'No hay planes disponibles por el momento.';
+                    plansContainer.appendChild(message);
+                    return;
+                }
+
+                planesDisponibles.forEach(plan => {
+                    plansContainer.appendChild(crearTarjetaPlan({
+                        id: plan.id,
+                        nombre: plan.nombre || plan.id,
+                        descripcion: plan.descripcion || '',
+                        beneficios: Array.isArray(plan.beneficios) ? plan.beneficios : [],
+                        precio: typeof plan.precio === 'number' ? plan.precio : null,
+                        moneda: plan.moneda || null,
+                        periodicidad: plan.periodicidad || null
+                    }));
+                });
+            } catch (error) {
+                const message = document.createElement('p');
+                message.className = 'plans-status';
+                message.textContent = error.message || 'No se pudieron cargar los planes.';
+                plansContainer.replaceChildren(message);
+            }
+        }
+
+        cargarPlanesPublicos();
+
+        plansContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-elegir-plan');
+            if (btn) {
+                e.preventDefault();
+                const plan = planesDisponibles.find(item => item.id === btn.dataset.planId);
+                if (plan) abrirDialogoApp(plan);
+            }
         });
 
-        // --- 4. CONTROL DE PLANES Y MODAL ---
-        const modalBasico = document.getElementById('modal-basico');
-        const btnCloseBasico = document.getElementById('btn-close-basico');
-        const btnElegirBasico = document.getElementById('btn-elegir-basico');
-        const formBasico = document.getElementById('form-solicitud-basico');
-        const telInput = document.getElementById('basico-tel');
-
-        // Formato para teléfono salvadoreño (XXXX-XXXX)
-        if (telInput) {
-            telInput.addEventListener('input', (e) => {
-                let val = e.target.value.replace(/\D/g, '');
-                if (val.length > 8) val = val.substring(0, 8);
-                if (val.length > 4) {
-                    e.target.value = val.substring(0, 4) + '-' + val.substring(4);
-                } else {
-                    e.target.value = val;
-                }
-            });
-        }
-
-        // Click en PLAN BÁSICO -> Abre Modal directamente sin pedir login
-        if (btnElegirBasico) {
-            btnElegirBasico.addEventListener('click', (e) => {
-                e.preventDefault();
-                formBasico.reset();
-                document.querySelectorAll('.form-group').forEach(g => g.classList.remove('has-error'));
-                document.getElementById('alert-success-basico').style.display = 'none';
-                modalBasico.classList.add('active');
-            });
-        }
-
-        // Click en PLANES COMERCIALES (Socio / Premium) -> Redirige a crear cuenta
-        document.querySelectorAll('.btn-plan-comercial').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const planName = btn.getAttribute('data-plan');
-                window.location.href = `/login?plan=${encodeURIComponent(planName)}&tab=register`;
-            });
+        document.getElementById('open-turismap-app').addEventListener('click', () => {
+            if (selectedPlanId) {
+                sessionStorage.setItem('turismap.pendingPlanId', selectedPlanId);
+                window.location.assign(construirEnlaceApp(selectedPlanId));
+            }
         });
 
-        // Cerrar Modal Básico
-        if (btnCloseBasico) {
-            btnCloseBasico.addEventListener('click', () => modalBasico.classList.remove('active'));
-        }
-        if (modalBasico) {
-            modalBasico.addEventListener('click', (e) => {
-                if (e.target === modalBasico) modalBasico.classList.remove('active');
-            });
-        }
-
-        // Envío de Solicitud de Plan Básico al Backend (/api/solicitudes/basico)
-        if (formBasico) {
-            formBasico.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                let esValido = true;
-
-                const nombre = document.getElementById('basico-nombre').value.trim();
-                const email = document.getElementById('basico-email').value.trim();
-                const tel = document.getElementById('basico-tel').value.trim();
-                const negocio = document.getElementById('basico-negocio').value.trim();
-                const muni = document.getElementById('basico-municipio').value;
-                const cat = document.getElementById('basico-categoria').value;
-                const dir = document.getElementById('basico-direccion').value.trim();
-                const desc = document.getElementById('basico-desc').value.trim();
-
-                document.querySelectorAll('.form-group').forEach(g => g.classList.remove('has-error'));
-
-                if (nombre.length < 3) {
-                    document.getElementById('grp-basico-nombre').classList.add('has-error');
-                    esValido = false;
-                }
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    document.getElementById('grp-basico-email').classList.add('has-error');
-                    esValido = false;
-                }
-                const regexSV = /^[267][0-9]{3}-[0-9]{4}$/;
-                if (!regexSV.test(tel)) {
-                    document.getElementById('grp-basico-tel').classList.add('has-error');
-                    esValido = false;
-                }
-                if (negocio.length < 2) {
-                    document.getElementById('grp-basico-negocio').classList.add('has-error');
-                    esValido = false;
-                }
-                if (!muni) {
-                    document.getElementById('grp-basico-muni').classList.add('has-error');
-                    esValido = false;
-                }
-                if (!cat) {
-                    document.getElementById('grp-basico-cat').classList.add('has-error');
-                    esValido = false;
-                }
-                if (dir.length < 4) {
-                    document.getElementById('grp-basico-dir').classList.add('has-error');
-                    esValido = false;
-                }
-
-                if (!esValido) return;
-
-                const btnSubmit = document.getElementById('btn-submit-basico');
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span>Enviando información...</span>';
-
-                try {
-                    const res = await fetch('/api/solicitudes/registrar', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            nombreCompleto: nombre,
-                            email: email,
-                            telefono: tel,
-                            nombreNegocio: negocio,
-                            municipio: muni,
-                            categoria: cat,
-                            direccion: dir,
-                            descripcion: desc,
-                            planId: 'presencia_basica',
-                            planNombre: 'Presencia Básica'
-                        })
-                    });
-
-                    if (!res.ok) throw new Error('Error al registrar solicitud');
-
-                    document.getElementById('alert-success-basico').style.display = 'block';
-                    setTimeout(() => {
-                        modalBasico.classList.remove('active');
-                        btnSubmit.disabled = false;
-                        btnSubmit.innerHTML = '<span>Enviar Solicitud a Revisión</span> <span>➔</span>';
-                    }, 2200);
-
-                } catch (err) {
-                    alert('No se pudo enviar la solicitud. Intenta nuevamente.');
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerHTML = '<span>Enviar Solicitud a Revisión</span> <span>➔</span>';
-                }
-            });
-        }
+        document.getElementById('close-app-handoff').addEventListener('click', cerrarDialogoApp);
+        appHandoffModal.addEventListener('click', event => {
+            if (event.target === appHandoffModal) cerrarDialogoApp();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && appHandoffModal.classList.contains('active')) {
+                cerrarDialogoApp();
+            }
+        });
     });
 </script>
 </body>

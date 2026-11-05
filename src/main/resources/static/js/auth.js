@@ -34,7 +34,6 @@ const regEmail = document.getElementById("regEmail");
 const regTelefono = document.getElementById("regTelefono");
 const regPassword = document.getElementById("regPassword");
 const regPasswordConfirm = document.getElementById("regPasswordConfirm");
-const regPlanInput = document.getElementById("register-plan-input");
 
 // ==========================================================
 // 1. CONTROLADOR DE LOGIN
@@ -65,6 +64,7 @@ if (loginForm) {
             localStorage.removeItem("userTipo");
             localStorage.removeItem("userName");
             localStorage.removeItem("userCorreo");
+            localStorage.removeItem("userTelefono");
 
             console.log("🟡 [TurisMap] Autenticando con Firebase:", email);
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -100,15 +100,6 @@ if (loginForm) {
                         ? data
                         : `Error del servidor (código ${response.status}).`;
 
-                // REGLA 3: Si no tiene plan activo
-                if (response.status === 403 && message.includes("plan")) {
-                    mostrarError(message);
-                    setTimeout(() => {
-                        window.location.href = "/?error=requiere_plan#negocios";
-                    }, 2000);
-                    return;
-                }
-
                 throw new Error(message);
             }
 
@@ -123,9 +114,10 @@ if (loginForm) {
             localStorage.setItem("userTipo", rol);
             localStorage.setItem("userName", data.nombre || "");
             localStorage.setItem("userCorreo", data.correo || "");
+            localStorage.setItem("userTelefono", data.telefono || "");
 
-            // Redirección inmediata a /admin o /portal-cliente
-            window.location.assign(data.redirectUrl);
+            const returnToPlanes = new URLSearchParams(window.location.search).get("returnTo") === "planes";
+            window.location.assign(returnToPlanes ? "/#negocios" : data.redirectUrl);
 
         } catch (error) {
             console.error("🔴 [TurisMap] Error durante el login:", error);
@@ -162,8 +154,6 @@ if (registerForm) {
         const telefono = regTelefono.value.trim();
         const password = regPassword.value;
         const confirmPassword = regPasswordConfirm.value;
-        const plan = regPlanInput.value || "NINGUNO";
-
         ocultarError();
 
         if (password !== confirmPassword) {
@@ -181,8 +171,10 @@ if (registerForm) {
             submitBtn.textContent = "Registrando usuario...";
         }
 
+        let cuentaFirebaseCreada = false;
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            cuentaFirebaseCreada = true;
 
             const response = await fetch("/api/auth/registro", {
                 method: "POST",
@@ -191,11 +183,9 @@ if (registerForm) {
                     "Accept": "application/json"
                 },
                 body: JSON.stringify({
+                    token: await userCredential.user.getIdToken(),
                     nombre: nombre,
-                    email: email,
-                    telefono: telefono,
-                    plan: plan,
-                    password: ""
+                    telefono: telefono
                 })
             });
 
@@ -204,15 +194,27 @@ if (registerForm) {
                 throw new Error(errorBackend || "No se pudo registrar en Firestore.");
             }
 
-            alert("¡Cuenta creada exitosamente! Iniciando sesión...");
-
+            await signOut(auth);
+            localStorage.removeItem("token");
+            localStorage.removeItem("userTipo");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userCorreo");
+            localStorage.removeItem("userTelefono");
             emailInput.value = email;
-            passwordInput.value = password;
+            regPassword.value = "";
+            regPasswordConfirm.value = "";
             cambiarPestaña('login');
-            loginForm.dispatchEvent(new Event('submit'));
+            alert("Cuenta creada. Para solicitar el registro de tu comercio, inicia sesión desde la aplicación móvil TurisMap.");
 
         } catch (error) {
             console.error("🔴 [TurisMap] Error en registro:", error);
+            if (cuentaFirebaseCreada) {
+                try {
+                    await signOut(auth);
+                } catch (signOutError) {
+                    console.error("Error cerrando la sesión temporal de Firebase:", signOutError);
+                }
+            }
             mostrarError(obtenerMensajeError(error));
         } finally {
             if (submitBtn) {

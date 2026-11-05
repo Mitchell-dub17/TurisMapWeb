@@ -998,6 +998,26 @@ window.abrirDetalleSolicitud = function(id) {
         sitioWeb.removeAttribute('href');
         sitioWeb.textContent = urlSitioWeb || 'No especificado';
     }
+
+    const latitud = Number(s.coordenadas?.latitud);
+    const longitud = Number(s.coordenadas?.longitud);
+    const coordenadasValidas = Number.isFinite(latitud) && Number.isFinite(longitud)
+        && latitud >= -90 && latitud <= 90
+        && longitud >= -180 && longitud <= 180
+        && s.coordenadas?.latitud !== null && s.coordenadas?.latitud !== ''
+        && s.coordenadas?.longitud !== null && s.coordenadas?.longitud !== '';
+    const coordenadasTexto = document.getElementById('modal-det-coordenadas');
+    const enlaceMapa = document.getElementById('modal-det-mapa');
+    if (coordenadasValidas) {
+        coordenadasTexto.textContent = `${latitud}, ${longitud}`;
+        enlaceMapa.href = `https://www.google.com/maps?q=${latitud},${longitud}`;
+        enlaceMapa.hidden = false;
+    } else {
+        coordenadasTexto.textContent = 'No especificadas';
+        enlaceMapa.removeAttribute('href');
+        enlaceMapa.hidden = true;
+    }
+
     document.getElementById('modal-det-direccion').textContent = s.direccion || 'Sin dirección física';
     document.getElementById('modal-det-descripcion').textContent = s.descripcion || 'Sin descripción adicional.';
 

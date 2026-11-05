@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import com.turismap.admin.model.LoginRequest;
 import com.turismap.admin.model.LoginResponse;
+import com.turismap.admin.model.RegistroUsuarioRequest;
 import com.turismap.admin.model.UsuarioFirestore;
 import com.turismap.admin.security.JwtUtil;
 import com.turismap.admin.service.UsuarioFirestoreService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -80,24 +82,19 @@ public class AuthController {
                             ? usuario.getRol().trim().toUpperCase(Locale.ROOT)
                             : "VIAJERO";
 
+                    if (rol.equals("VIAJERO")) {
+                        log.info("Se rechazó el acceso web para la cuenta VIAJERO: {}", email);
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body("Las cuentas VIAJERO deben iniciar sesión desde la aplicación móvil. El acceso web está reservado para ADMIN y CLIENTE.");
+                    }
+
                     // ==============================================================
-                    // REGLA 2: Si el viajero adquirió plan Socio o Premium,
+                    // Si el usuario tiene plan Socio o Premium,
                     // se le habilita dinámicamente el acceso como CLIENTE.
                     // ==============================================================
                     if ((plan.contains("SOCIO") || plan.contains("PREMIUM")) && !rol.equals("ADMIN")) {
                         rol = "CLIENTE";
                         log.info("Usuario {} promovido a CLIENTE por contar con plan {}", email, plan);
-                    }
-
-                    // ==============================================================
-                    // REGLAS 1 Y 3:
-                    // Si sigue siendo VIAJERO (sin plan o con plan BASICO),
-                    // no tiene permiso para entrar al portal web.
-                    // ==============================================================
-                    if (!rol.equals("ADMIN") && !rol.equals("CLIENTE")) {
-                        log.warn("Acceso denegado a la web para {} (rol: {}, plan: {})", email, rol, plan);
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body("Para ingresar tienes que tener plan");
                     }
 
                     UserDetails userDetails = User.builder()
@@ -107,7 +104,10 @@ public class AuthController {
                                     new SimpleGrantedAuthority("ROLE_" + rol)))
                             .build();
 
-                    String token = jwtUtil.generateToken(userDetails);
+                    String token = jwtUtil.generateToken(
+                            userDetails,
+                            Map.of("firebaseUid", decodedToken.getUid())
+                    );
                     String redirectUrl = determineRedirectUrl(rol);
 
                     LoginResponse response = LoginResponse.builder()
@@ -115,6 +115,7 @@ public class AuthController {
                             .tipo(rol.toLowerCase(Locale.ROOT))
                             .nombre(usuario.getNombre())
                             .correo(usuario.getEmail())
+                            .telefono(usuario.getTelefono())
                             .redirectUrl(redirectUrl)
                             .build();
 
@@ -130,18 +131,25 @@ public class AuthController {
 
     @PostMapping("/registro")
     public CompletableFuture<ResponseEntity<?>> registro(
-            @Valid @RequestBody UsuarioFirestore usuario) {
-
-        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
-            return CompletableFuture.completedFuture(
-                    ResponseEntity.badRequest()
-                            .body("El correo electrónico es obligatorio"));
+            @Valid @RequestBody RegistroUsuarioRequest registro) {
+        final FirebaseToken decodedToken;
+        try {
+            decodedToken = FirebaseAuth.getInstance().verifyIdToken(registro.getToken());
+        } catch (Exception e) {
+            log.warn("No se pudo validar el token de Firebase durante el registro: {}", e.getMessage());
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Token de Firebase inválido o expirado"));
         }
 
-        log.info("Intento de registro para: {}", usuario.getEmail());
+        String email = decodedToken.getEmail();
+        if (email == null || email.isBlank()) {
+            return CompletableFuture.completedFuture(ResponseEntity.badRequest()
+                    .body("La cuenta de Firebase no tiene un correo válido."));
+        }
 
+        log.info("Intento de registro para: {}", email);
         return usuarioFirestoreService
-                .obtenerUsuarioPorEmail(usuario.getEmail())
+                .obtenerUsuarioPorEmail(email)
                 .<ResponseEntity<?>>thenCompose(existing -> {
 
                     if (existing != null) {
@@ -150,37 +158,16 @@ public class AuthController {
                                         .body("El correo ya está registrado"));
                     }
 
-                    // ==============================================================
-                    // ASIGNACIÓN DE ROLES Y PLANES SEGÚN SELECCIÓN EN LA WEB
-                    // ==============================================================
-                    String planInput = (usuario.getPlan() != null)
-                            ? usuario.getPlan().trim().toUpperCase(Locale.ROOT)
-                            : "";
-
-                    if (planInput.contains("PREMIUM")) {
-                        // Plan Socio Premium ($25)
-                        usuario.setRol("CLIENTE");
-                        usuario.setPlan("PREMIUM");
-                    } else if (planInput.contains("SOCIO")) {
-                        // Plan Socio TurisMap ($15)
-                        usuario.setRol("CLIENTE");
-                        usuario.setPlan("SOCIO");
-                    } else if (planInput.contains("BASICO") || planInput.contains("BÁSICO")) {
-                        // REGLA 1: Presencia Básica ($5) crea cuenta pero queda como VIAJERO sin portal
-                        usuario.setRol("VIAJERO");
-                        usuario.setPlan("BASICO");
-                    } else {
-                        // Registro común de turista o sin selección previa
-                        if (usuario.getRol() == null || usuario.getRol().isBlank()) {
-                            usuario.setRol("VIAJERO");
-                        }
-                        usuario.setPlan("NINGUNO");
-                    }
-
-                    String uid = java.util.UUID.randomUUID().toString();
+                    UsuarioFirestore usuario = new UsuarioFirestore();
+                    usuario.setId(decodedToken.getUid());
+                    usuario.setNombre(registro.getNombre().trim());
+                    usuario.setEmail(email);
+                    usuario.setTelefono(registro.getTelefono().trim());
+                    usuario.setRol("VIAJERO");
+                    usuario.setPlan("NINGUNO");
 
                     return usuarioFirestoreService
-                            .crearUsuario(uid, usuario)
+                            .crearUsuario(decodedToken.getUid(), usuario)
                             .<ResponseEntity<?>>thenApply(created ->
                                     ResponseEntity.status(HttpStatus.CREATED)
                                             .body("Usuario registrado exitosamente"));

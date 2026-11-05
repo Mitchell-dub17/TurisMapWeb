@@ -69,19 +69,19 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
 
-                        // 5. Autenticación, registro público y solicitudes públicas
+                        // 5. Autenticación y registro de cuentas
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/solicitudes/basico").permitAll()
 
                         // 6. Consultas públicas de lugares y reseñas para la web y app
                         .requestMatchers(HttpMethod.GET, "/api/lugares/**", "/api/resenas/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes/planes").permitAll()
 
                         // 7. API Administrativa exclusiva
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // ==============================================================
                         // REGLAS 1 Y 2: Solo roles ADMIN y CLIENTE acceden a la gestión
-                        // Los que tienen plan Básico o solo VIAJERO son rechazados aquí
+                        // Los que tienen plan Básico o rol VIAJERO son rechazados aquí
                         // ==============================================================
                         .requestMatchers("/api/archivos/**").hasAnyRole("ADMIN", "CLIENTE")
                         .requestMatchers("/api/cliente/**").hasAnyRole("ADMIN", "CLIENTE")
@@ -101,7 +101,7 @@ public class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.getWriter().write("{\"status\": 401, \"error\": \"No autorizado\", \"mensaje\": \"Debes iniciar sesión para continuar\"}");
                         })
-                        // Cuando es un VIAJERO o no tiene el rol necesario (403)
+                        // Cuando no tiene el rol necesario (403)
                         .accessDeniedHandler(customAccessDeniedHandler())
                 )
 
@@ -115,8 +115,8 @@ public class SecurityConfig {
 
     /**
      * Manejador para la Regla 3:
-     * Si un usuario autenticado solo como VIAJERO o con plan BASICO
-     * intenta realizar acciones de cliente, devuelve el mensaje acordado.
+     * Si un usuario intenta realizar acciones sin el rol requerido,
+     * devuelve el mensaje de acceso denegado acordado.
      */
     @Bean
     public AccessDeniedHandler customAccessDeniedHandler() {

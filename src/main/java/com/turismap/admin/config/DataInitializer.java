@@ -294,6 +294,9 @@ public class DataInitializer implements CommandLineRunner {
         PlanComercio presenciaBasica = PlanComercio.builder()
                 .nombre("Presencia Básica")
                 .descripcion("Propuesta inicial de referencia. El alcance y las condiciones se confirmarán antes de activar el plan.")
+                .precio(5.0)
+                .moneda("USD")
+                .periodicidad("MES")
                 .beneficios(Arrays.asList(
                         "Perfil del negocio en el directorio de TurisMap.",
                         "Información de contacto, ubicación, categoría y horario.",
@@ -309,7 +312,9 @@ public class DataInitializer implements CommandLineRunner {
                         return planComercioService.crearPlan("presencia_basica", presenciaBasica)
                                 .thenAccept(p -> log.info("Plan creado: {}", p.getNombre()));
                     }
-                    return CompletableFuture.completedFuture(null);
+                    return existing.getPrecio() == null
+                            ? planComercioService.establecerPrecioPlan("presencia_basica", 5.0)
+                            : CompletableFuture.completedFuture(null);
                 })
                 .join();
 
@@ -317,6 +322,9 @@ public class DataInitializer implements CommandLineRunner {
         PlanComercio socioTurismap = PlanComercio.builder()
                 .nombre("Socio TurisMap")
                 .descripcion("Propuesta inicial de referencia para negocios que buscan mayor presencia. El alcance y las condiciones se confirmarán antes de activar el plan.")
+                .precio(15.0)
+                .moneda("USD")
+                .periodicidad("MES")
                 .beneficios(Arrays.asList(
                         "Incluye la presencia del negocio en el directorio.",
                         "Opción de mostrar una galería de imágenes del negocio.",
@@ -332,7 +340,9 @@ public class DataInitializer implements CommandLineRunner {
                         return planComercioService.crearPlan("socio_turismap", socioTurismap)
                                 .thenAccept(p -> log.info("Plan creado: {}", p.getNombre()));
                     }
-                    return CompletableFuture.completedFuture(null);
+                    return existing.getPrecio() == null
+                            ? planComercioService.establecerPrecioPlan("socio_turismap", 15.0)
+                            : CompletableFuture.completedFuture(null);
                 })
                 .join();
 
@@ -340,6 +350,9 @@ public class DataInitializer implements CommandLineRunner {
         PlanComercio socioPremium = PlanComercio.builder()
                 .nombre("Socio Premium")
                 .descripcion("Propuesta inicial de referencia para negocios que buscan una promoción más amplia. El alcance y las condiciones se confirmarán antes de activar el plan.")
+                .precio(25.0)
+                .moneda("USD")
+                .periodicidad("MES")
                 .beneficios(Arrays.asList(
                         "Incluye las opciones de presencia y promoción de los otros planes.",
                         "Posibilidad de una ubicación destacada en espacios del directorio.",
@@ -355,7 +368,9 @@ public class DataInitializer implements CommandLineRunner {
                         return planComercioService.crearPlan("socio_premium", socioPremium)
                                 .thenAccept(p -> log.info("Plan creado: {}", p.getNombre()));
                     }
-                    return CompletableFuture.completedFuture(null);
+                    return existing.getPrecio() == null
+                            ? planComercioService.establecerPrecioPlan("socio_premium", 25.0)
+                            : CompletableFuture.completedFuture(null);
                 })
                 .join();
     }

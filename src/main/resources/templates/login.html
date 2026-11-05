@@ -56,22 +56,6 @@
 
         .auth-logo span { color: var(--primary); }
 
-        .plan-notice {
-            background: rgba(0, 209, 102, 0.12);
-            border: 1px solid rgba(0, 209, 102, 0.3);
-            border-radius: 12px;
-            padding: 12px 18px;
-            max-width: 460px;
-            width: 100%;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 13px;
-        }
-
-        .plan-notice strong { color: var(--primary); }
-
         #errorMsg {
             background: rgba(255, 56, 92, 0.15);
             border: 1px solid #FF385C;
@@ -271,13 +255,7 @@
     </a>
 </header>
 
-<!-- BANNER DE PLAN SELECCIONADO -->
-<div class="plan-notice" id="plan-notice" style="display: none;">
-    <span>🎯</span>
-    <div>
-        Estás a un paso de solicitar el <strong id="notice-plan-name">Plan</strong>. Regístrate o ingresa a tu cuenta para continuar.
-    </div>
-</div>
+
 
 <!-- BANNER DINÁMICO DE ERRORES -->
 <div id="errorMsg"></div>
@@ -312,14 +290,16 @@
         <button type="submit" class="btn-submit" id="btnLoginSubmit">Ingresar a TurisMap</button>
 
         <p class="form-footer">
+            El acceso web está reservado para cuentas ADMIN y CLIENTE. Las cuentas VIAJERO usan la app móvil.
+        </p>
+
+        <p class="form-footer">
             ¿No tienes cuenta? <a href="javascript:void(0)" onclick="cambiarPestaña('register')">Regístrate aquí</a>
         </p>
     </form>
 
     <!-- 2. FORMULARIO DE REGISTRO -->
     <form class="auth-form" id="registerForm" style="display: none;" novalidate>
-        <input type="hidden" id="register-plan-input" value="NINGUNO">
-
         <div class="form-group">
             <label for="regNombre">Nombre Completo *</label>
             <input type="text" id="regNombre" placeholder="Ej. Diego Zepeda" required>
@@ -392,14 +372,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const planParam = urlParams.get('plan');
         const tabParam = urlParams.get('tab');
-
-        if (planParam) {
-            document.getElementById('plan-notice').style.display = 'flex';
-            document.getElementById('notice-plan-name').textContent = planParam;
-            document.getElementById('register-plan-input').value = planParam;
-        }
 
         if (tabParam === 'register') {
             cambiarPestaña('register');
@@ -421,6 +394,6 @@
 </script>
 
 <!-- CARGA DE AUTH.JS CON CONTROL DE CACHÉ -->
-<script type="module" th:src="@{/js/auth.js(v=3)}"></script>
+<script type="module" th:src="@{/js/auth.js(v=4)}"></script>
 </body>
 </html>
