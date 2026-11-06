@@ -284,6 +284,30 @@ public class SolicitudService {
         });
     }
 
+    public CompletableFuture<List<SolicitudRegistroComercio>> obtenerPorPropietario(String propietarioUid) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                List<SolicitudRegistroComercio> solicitudes = new ArrayList<>();
+                var documentos = getFirestore().collection(COLECCION)
+                        .whereEqualTo("propietarioUid", propietarioUid)
+                        .get().get();
+                for (QueryDocumentSnapshot documento : documentos.getDocuments()) {
+                    SolicitudRegistroComercio solicitud =
+                            documento.toObject(SolicitudRegistroComercio.class);
+                    solicitud.setId(documento.getId());
+                    if (solicitud.getPlanId() == null || solicitud.getPlanId().isBlank()) {
+                        solicitud.setPlanId(obtenerPlanId(documento.getData()));
+                    }
+                    solicitudes.add(solicitud);
+                }
+                return solicitudes;
+            } catch (Exception e) {
+                log.error("Error al consultar solicitudes del propietario {}", propietarioUid, e);
+                throw new CompletionException(e);
+            }
+        });
+    }
+
     private String obtenerPlanId(Map<String, Object> datos) {
         Object planId = datos.get("planId");
         if (planId instanceof String id && !id.isBlank()) {

@@ -1,6 +1,7 @@
 package com.turismap.admin.controller;
 
 import com.turismap.admin.model.Comercio;
+import com.turismap.admin.security.JwtUtil;
 import com.turismap.admin.service.ComercioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 public class ComercioController {
 
     private final ComercioService comercioService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
@@ -41,14 +44,62 @@ public class ComercioController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
     public CompletableFuture<ResponseEntity<?>> actualizarComercio(
             @PathVariable String id,
-            @Valid @RequestBody Comercio comercio) {
+            @Valid @RequestBody Comercio comercio,
+            Authentication authentication,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
         log.info("Actualizando comercio: {}", id);
-        
+
+        if (esCliente(authentication)) {
+            String propietarioUid = extraerPropietarioUid(authorization);
+            if (propietarioUid == null) {
+                return CompletableFuture.completedFuture(ResponseEntity.status(403)
+                        .body("La sesión no contiene la identidad necesaria para actualizar el comercio."));
+            }
+            return comercioService.obtenerComercioPorId(id)
+                    .thenCompose(existente -> {
+                        if (existente == null) {
+                            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+                        }
+                        if (!propietarioUid.equals(existente.getPropietarioUid())) {
+                            return CompletableFuture.completedFuture(ResponseEntity.status(403).build());
+                        }
+                        comercio.setPropietarioUid(propietarioUid);
+                        comercio.setEstado(existente.getEstado());
+                        comercio.setDestacado(existente.getDestacado());
+                        comercio.setCalificacionPromedio(existente.getCalificacionPromedio());
+                        comercio.setCantidadResenas(existente.getCantidadResenas());
+                        comercio.setLugarId(existente.getLugarId());
+                        return comercioService.actualizarComercio(id, comercio)
+                                .<ResponseEntity<?>>thenApply(ResponseEntity::ok);
+                    })
+                    .exceptionally(ex -> {
+                        log.error("Error al actualizar comercio del cliente: {}", id, ex);
+                        return ResponseEntity.status(500).body("Error al actualizar comercio");
+                    });
+        }
+
         return comercioService.actualizarComercio(id, comercio)
                 .<ResponseEntity<?>>thenApply(updated -> ResponseEntity.ok(updated))
                 .exceptionally(ex -> {
                     log.error("Error al actualizar comercio: {}", ex.getMessage());
                     return ResponseEntity.status(500).body("Error al actualizar comercio");
+                });
+    }
+
+    @GetMapping("/mios")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public CompletableFuture<ResponseEntity<?>> obtenerMisComercios(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        String propietarioUid = extraerPropietarioUid(authorization);
+        if (propietarioUid == null) {
+            return CompletableFuture.completedFuture(ResponseEntity.status(403)
+                    .body("La sesión no contiene la identidad necesaria para consultar comercios."));
+        }
+        return comercioService.obtenerComerciosPorPropietario(propietarioUid)
+                .<ResponseEntity<?>>thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> {
+                    log.error("Error al consultar comercios del cliente", ex);
+                    return ResponseEntity.status(500).body("Error al obtener tus comercios");
                 });
     }
 
@@ -173,5 +224,27 @@ public class ComercioController {
                     log.error("Error al obtener comercios destacados: {}", ex.getMessage());
                     return ResponseEntity.status(500).body("Error al obtener comercios");
                 });
+    }
+
+    private boolean esCliente(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_CLIENTE"::equals);
+    }
+
+    private String extraerPropietarioUid(String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            String uid = jwtUtil.extractClaim(
+                    authorization.substring(7).trim(),
+                    claims -> claims.get("firebaseUid", String.class)
+            );
+            return uid == null || uid.isBlank() ? null : uid;
+        } catch (Exception ex) {
+            log.warn("No se pudo identificar al propietario para consultar o actualizar un comercio");
+            return null;
+        }
     }
 }

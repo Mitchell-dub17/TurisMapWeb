@@ -49,6 +49,24 @@ public class SolicitudController {
                 });
     }
 
+    @GetMapping("/mias")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public CompletableFuture<ResponseEntity<?>> obtenerMisSolicitudes(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        String propietarioUid = extraerPropietarioUid(authorization);
+        if (propietarioUid == null) {
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("La sesión no contiene la identidad necesaria para consultar solicitudes."));
+        }
+        return solicitudService.obtenerPorPropietario(propietarioUid)
+                .<ResponseEntity<?>>thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> {
+                    log.error("Error al consultar solicitudes del cliente", ex);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("No se pudieron consultar tus solicitudes.");
+                });
+    }
+
     // El servidor toma la identidad del usuario de la sesión verificada, no del formulario.
     @PostMapping("/registrar")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
@@ -124,5 +142,21 @@ public class SolicitudController {
                         : ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró la solicitud"))
                 .exceptionally(ex -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Error al actualizar estado"));
+    }
+
+    private String extraerPropietarioUid(String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return null;
+        }
+        try {
+            String uid = jwtUtil.extractClaim(
+                    authorization.substring(7).trim(),
+                    claims -> claims.get("firebaseUid", String.class)
+            );
+            return uid == null || uid.isBlank() ? null : uid;
+        } catch (Exception ex) {
+            log.warn("No se pudo identificar al propietario para consultar solicitudes");
+            return null;
+        }
     }
 }
